@@ -328,6 +328,21 @@ Ctrl+b, d
 - Check network connectivity
 - See [remote access guide](docs/remote-access.md)
 
+### Status Bar Icons Show as `_` Underscores
+Status bar uses Nerd Font glyphs from the Material Design Icons range
+(`U+F0000+`). If they render as `_`, in order of likelihood:
+
+1. **Server locale is not UTF-8** — `ssh user@server 'locale'`; if `LANG=C`,
+   add `export LANG=C.UTF-8 LC_ALL=C.UTF-8` to `~/.bashrc` and recreate
+   sessions (`tmux kill-server && setup-console-sessions`).
+2. **SSH `RemoteCommand` bypasses your shell init** — bake the locale into
+   the command itself:
+   `RemoteCommand LANG=C.UTF-8 LC_ALL=C.UTF-8 /usr/bin/tmux -u attach -t console-1`
+3. **Local terminal isn't using a Nerd Font** — install a Nerd Font (e.g.
+   CaskaydiaCove, JetBrainsMono) and set it in your terminal profile.
+
+Full diagnostic flow: [troubleshooting guide](docs/troubleshooting.md#icons--status-bar-display-issues).
+
 ## 🤝 Contributing
 
 Contributions welcome! Please read our [Contributing Guide](CONTRIBUTING.md).

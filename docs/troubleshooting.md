@@ -264,6 +264,98 @@ ssh -o SendEnv=TERM user@server
 echo 'export TERM=tmux-256color' >> ~/.bashrc
 ```
 
+## 🎨 Icons & Status Bar Display Issues
+
+### Icons render as `_` underscores (or `?`, blank squares)
+
+The status bar uses **Nerd Font glyphs** from the Material Design Icons set in
+the Unicode private-use area (`U+F0000`+). They're sent as multibyte UTF-8.
+If you see `_`, `?`, or empty boxes instead of the icons, one of three things
+is wrong — check in this order.
+
+#### 1. Server locale is not UTF-8
+
+This is the #1 cause and the easiest to miss because **everything else
+works** (text, colors, key bindings) — only multibyte glyphs fail.
+
+**Diagnose:**
+```bash
+ssh user@server 'locale'
+# If output shows LANG=C or LANG=POSIX → locale is the problem
+```
+
+`tmux` running under a non-UTF-8 locale treats multibyte sequences as
+separate single-byte chars, mangling them on the way to the terminal.
+
+**Fix (Debian/Ubuntu — `C.UTF-8` is built into glibc, no generation needed):**
+```bash
+# On the server:
+echo 'export LANG=C.UTF-8'   >> ~/.bashrc
+echo 'export LC_ALL=C.UTF-8' >> ~/.bashrc
+
+# Restart tmux server so it inherits the new locale
+# (sessions are recreated empty — only do this if no live work is running)
+tmux kill-server
+LANG=C.UTF-8 LC_ALL=C.UTF-8 setup-console-sessions
+```
+
+For RHEL/Fedora/Arch substitute `en_US.UTF-8` (run `locale -a | grep -i utf`
+to see what's actually generated; install `glibc-langpack-en` on Fedora if
+needed).
+
+#### 2. SSH `RemoteCommand` bypasses shell init
+
+If you connect with an SSH alias that runs tmux directly, `~/.bashrc` is
+**never sourced** because there's no login shell in the chain — sshd execs
+your `RemoteCommand` directly. So the locale fix from step 1 doesn't reach
+the tmux client.
+
+**Symptom:** locale on server is correct when you `ssh user@server`
+interactively, but glyphs still break when you use a `RemoteCommand` alias.
+
+**Fix:** put the locale and `-u` (force UTF-8) in the `RemoteCommand` itself:
+
+```sshconfig
+Host my-ptty
+  Hostname your.server
+  User you
+  RequestTTY yes
+  RemoteCommand LANG=C.UTF-8 LC_ALL=C.UTF-8 /usr/bin/tmux -u attach -t console-1
+```
+
+The `-u` flag forces tmux into UTF-8 mode regardless of what locale lookup
+returns at runtime — belt-and-braces.
+
+#### 3. Local terminal font has no Nerd Font glyphs
+
+If the server is fine but glyphs still break, the local terminal isn't
+using a Nerd Font (or is using a Nerd Font variant without the Material
+Design Icons subset).
+
+**Diagnose locally** (no SSH involved):
+```bash
+# Linux/macOS
+printf '9 pTTY  1 user\n'
+
+# Windows PowerShell
+Write-Host "`u{F08A9} pTTY  `u{F0011} user"
+```
+
+If you see `_` here too, your local font is the culprit — install a Nerd
+Font with the MDI subset (`CaskaydiaCove Nerd Font`, `JetBrainsMono Nerd
+Font`, `Hack Nerd Font`) and set it in your terminal profile. Make sure
+the profile actually using the Nerd Font is the one your SSH alias opens.
+
+### Status bar shows but icons positions are wrong (text shifted)
+
+This usually means the terminal is rendering Nerd Font glyphs at the wrong
+width. Some terminals report PUA codepoints as width-1 while the Nerd Font
+actually draws them width-2.
+
+**Fix:** ensure you're using a Nerd Font Mono variant (e.g. `JetBrainsMono
+Nerd Font Mono`, not the proportional one). The "Mono" variants force
+double-width glyphs, which matches what tmux expects.
+
 ## 🖥️ Terminal Emulator Specific Issues
 
 ### Windows Terminal

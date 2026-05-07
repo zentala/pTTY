@@ -414,6 +414,37 @@ Host your-server.com
     Compression yes
 ```
 
+### Direct-Attach SSH Alias (UTF-8 safe)
+
+If you want `ssh my-ptty` to drop you straight into a console, use
+`RemoteCommand` — but **bake `LANG=C.UTF-8` and the `-u` flag into the
+command**, otherwise Nerd Font icons render as `_` underscores. SSH
+`RemoteCommand` bypasses shell init (`~/.bashrc` is **not** sourced) so
+locale exports there don't reach tmux.
+
+```sshconfig
+Host my-ptty
+    Hostname your.server.com
+    User your-username
+    IdentityFile ~/.ssh/id_ed25519
+    RequestTTY yes
+    RemoteCommand LANG=C.UTF-8 LC_ALL=C.UTF-8 /usr/bin/tmux -u attach -t console-1
+    ServerAliveInterval 30
+    ServerAliveCountMax 6
+```
+
+Pair with a separate clean alias for `scp`/`rsync`/non-interactive commands:
+
+```sshconfig
+Host your.server.com
+    User your-username
+    IdentityFile ~/.ssh/id_ed25519
+    # No RemoteCommand — runs anything you pass
+```
+
+This way `ssh my-ptty` opens tmux directly with UTF-8 forced, and
+`ssh your.server.com 'uptime'` keeps working for scripts.
+
 ### Font Optimization
 Best fonts for console work:
 - **Cascadia Code PL** (includes Powerline glyphs)
