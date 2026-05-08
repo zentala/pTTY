@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pTTY · F11 / F12 redesign mockup</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel-2: #1c232c;
+    --border: #2d3640;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --text-faint: #545d66;
+    --accent: #4cc2ff;
+    --accent-2: #7ee787;
+    --warn: #f0b86e;
+    --danger: #ff7b72;
+    --idle: #8b949e;
+    --dead: #ff7b72;
+    --live: #7ee787;
+    --slot: #545d66;
+    --selected: #1f6feb33;
+    --selected-border: #4cc2ff;
+    --review-bg: #14181f;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0; padding: 0;
+  }
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 8px; }
+  h2 { font-size: 22px; margin: 56px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 16px; margin: 24px 0 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+  p, li { color: var(--text-dim); line-height: 1.6; }
+  code, pre, .mono {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  code { background: var(--panel); padding: 2px 6px; border-radius: 4px; color: var(--accent); font-size: 0.92em; }
+  .lede { font-size: 17px; color: var(--text); max-width: 70ch; }
+  .lede strong { color: #fff; }
+
+  /* Terminal frame */
+  .term {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 16px 48px -16px #000a, 0 0 0 1px #0006;
+    margin: 16px 0 8px;
+  }
+  .term-titlebar {
+    background: linear-gradient(180deg, #20262e, #161b22);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 14px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .traffic span:nth-child(1){ background:#ff5f57; }
+  .traffic span:nth-child(2){ background:#febc2e; }
+  .traffic span:nth-child(3){ background:#28c840; }
+  .term-body {
+    padding: 18px 22px 22px;
+    font-family: "JetBrains Mono", "Fira Code", ui-monospace, Menlo, monospace;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text);
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .term-body .muted { color: var(--text-faint); }
+  .term-body .dim { color: var(--text-dim); }
+  .term-body .key { color: var(--accent); font-weight: 600; }
+  .term-body .accent { color: var(--accent); }
+  .term-body .ok { color: var(--live); }
+  .term-body .idle { color: var(--idle); }
+  .term-body .dead { color: var(--dead); }
+  .term-body .slot { color: var(--slot); }
+  .term-body .warn { color: var(--warn); }
+  .term-body .danger { color: var(--danger); }
+  .term-body .row-selected {
+    background: var(--selected);
+    box-shadow: inset 2px 0 0 var(--selected-border);
+    display: inline-block;
+    padding-right: 16px;
+  }
+
+  .meta {
+    color: var(--text-faint);
+    font-size: 12px;
+    margin: 6px 4px 24px;
+    display: flex; gap: 18px; flex-wrap: wrap;
+  }
+  .meta b { color: var(--text-dim); font-weight: 500; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .callout {
+    border-left: 3px solid var(--warn);
+    background: #2a230f44;
+    padding: 12px 14px;
+    border-radius: 4px;
+    margin: 14px 0;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .callout.bad { border-color: var(--danger); background: #3a1a1a44; }
+  .callout.good { border-color: var(--live); background: #1a3a2244; }
+
+  .review {
+    background: var(--review-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 26px;
+    margin-top: 24px;
+  }
+  .review h2 { margin-top: 4px; border: none; padding-bottom: 0; }
+  .review h2 .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #0e1116;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    vertical-align: middle;
+    margin-left: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .review.eng h2 .badge { background: var(--accent-2); }
+  .verdict {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  .verdict.go { background: #1a3a22; color: var(--live); border: 1px solid #2d6a3e; }
+  .verdict.conditional { background: #2a230f; color: var(--warn); border: 1px solid #6a4d2d; }
+
+  table.kv { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+  table.kv td { padding: 6px 10px; border-bottom: 1px solid #1c232c; vertical-align: top; }
+  table.kv td:first-child { color: var(--text-dim); width: 30%; white-space: nowrap; }
+
+  .legend {
+    font-size: 12px; color: var(--text-faint);
+    margin-top: 8px; padding-left: 8px;
+  }
+  .legend span { margin-right: 14px; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+  .footer { text-align: center; color: var(--text-faint); font-size: 12px; margin-top: 64px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>pTTY · F11 / F12 redesign</h1>
+<p class="lede">
+  Mockup mapujący <strong>cztery zasady</strong>: (1) popup zamiast pseudo-sesji,
+  (2) jeden klawisz = jedna akcja, (3) realne metryki w wierszu, (4) kontekstowy help
+  generowany z <code>tmux list-keys</code>, nie statyczny tekst.
+</p>
+<div class="meta">
+  <span><b>tmux:</b> 3.5a (popup ✅)</span>
+  <span><b>Wymóg:</b> tmux ≥ 3.2</span>
+  <span><b>Skala wzorca:</b> lazygit · k9s · gh</span>
+  <span><b>Status:</b> mockup do iteracji</span>
+</div>
+
+<!-- ============== F11 ============== -->
+<h2>F11 — Manager (popup, lazygit-style)</h2>
+
+<div class="callout bad">
+  <strong>Stan obecny:</strong> osobna tmux sesja <code>manager</code> z dwustopniowym fzf
+  (wybierz sesję → kolejne menu → akcja). Brak Kill / New / Rename.
+  Pseudo-sesja zaśmieca <code>list-sessions</code>.
+</div>
+
+<div class="term">
+  <div class="term-titlebar">
+    <div class="traffic"><span></span><span></span><span></span></div>
+    <span style="margin-left:8px">pTTY popup · 90% × 85% · display-popup -E</span>
+  </div>
+  <div class="term-body">┌─ <span class="accent">pTTY Manager</span> ───────────────────────────────────────────  <span class="key">[?]</span> <span class="dim">help</span>  <span class="key">[/]</span> <span class="dim">filter</span>  <span class="key">[q]</span> <span class="dim">close</span> ─┐
+│                                                                                          │
+│   <span class="dim">F-key   Status     Console            Uptime    Last cmd            CPU%    Mem</span>     │
+│   <span class="muted">─────   ────────   ─────────────────  ────────  ──────────────────  ──────  ──────</span> │
+│ <span class="row-selected"><span class="accent">▸</span>  <span class="key">F1</span>      <span class="ok">●</span> live     console-1          2h 14m    vim src/main.go      1.2%   84M</span>   │
+│    <span class="key">F2</span>      <span class="ok">●</span> live     console-2          45m       pnpm dev            <span class="warn">18.4%</span>  312M    │
+│    <span class="key">F3</span>      <span class="idle">○</span> idle     console-3          3m        bash                  0%    12M    │
+│    <span class="key">F4</span>      <span class="dead">✖</span> dead     console-4          —         <span class="dead">(crashed: oom)</span>      —      —     │
+│    <span class="key">F5</span>      <span class="ok">●</span> live     console-5          8h 02m    ssh prod              0.1%    6M    │
+│    <span class="key">F6</span>      <span class="slot">·</span> slot     <span class="muted">(empty — press n to create)</span>                                  │
+│    <span class="key">F7</span>      <span class="slot">·</span> slot     <span class="muted">(empty)</span>                                                       │
+│    <span class="key">F8</span>      <span class="idle">◐</span> sleep    console-8          12h       <span class="dim">auto-suspended</span>          0%    0M     │
+│    <span class="key">F9</span>      <span class="slot">·</span> slot     <span class="muted">(empty)</span>                                                       │
+│    <span class="key">F10</span>     <span class="slot">·</span> slot     <span class="muted">(empty)</span>                                                       │
+│                                                                                          │
+│  <span class="muted">─── Preview · console-1 · pid 18432 · pts/3 ─────────────────────────────────</span>           │
+│  <span class="dim">$ vim src/main.go</span>                                                                       │
+│  <span class="dim">~ NORMAL ~ src/main.go     1234L, 5678C    utf-8     unix</span>                                │
+│                                                                                          │
+└─ <span class="key">Enter</span> <span class="dim">switch</span> · <span class="key">K</span> <span class="dim">kill</span> · <span class="key">r</span> <span class="dim">restart</span> · <span class="key">n</span> <span class="dim">new</span> · <span class="key">R</span> <span class="dim">rename</span> · <span class="key">j/k</span> <span class="dim">move</span> · <span class="key">/</span> <span class="dim">filter</span> ──┘</div>
+</div>
+
+<div class="legend">
+  <span><span class="mono" style="color:var(--live)">●</span> live = aktywny proces foreground</span>
+  <span><span class="mono" style="color:var(--idle)">○</span> idle = sesja istnieje, brak procesów</span>
+  <span><span class="mono" style="color:var(--idle)">◐</span> sleep = uśpiona przez auto-suspend</span>
+  <span><span class="mono" style="color:var(--dead)">✖</span> dead = sesja w stanie błędu</span>
+  <span><span class="mono" style="color:var(--slot)">·</span> slot = wolne miejsce F-key</span>
+</div>
+
+<div class="grid-2" style="margin-top:18px">
+  <div>
+    <h3>Klawisze (single-key, vi-flavored)</h3>
+    <table class="kv">
+      <tr><td><code>j</code> / <code>↓</code></td><td>w dół</td></tr>
+      <tr><td><code>k</code> / <code>↑</code></td><td>w górę (uwaga: <em>kill</em> to <code>K</code>)</td></tr>
+      <tr><td><code>Enter</code></td><td>switch</td></tr>
+      <tr><td><code>K</code> (shift)</td><td>kill (z confirm)</td></tr>
+      <tr><td><code>r</code></td><td>restart (z confirm)</td></tr>
+      <tr><td><code>R</code></td><td>rename inline</td></tr>
+      <tr><td><code>n</code></td><td>new w pierwszym wolnym slocie</td></tr>
+      <tr><td><code>1</code>–<code>0</code></td><td>jump cursor F1–F10</td></tr>
+      <tr><td><code>/</code></td><td>fuzzy filter</td></tr>
+      <tr><td><code>?</code> / <code>q</code> / <code>Esc</code></td><td>help / close</td></tr>
+    </table>
+  </div>
+  <div>
+    <h3>Co dochodzi vs. dziś</h3>
+    <ul>
+      <li><strong>Popup overlay</strong> — zero pseudo-sesji w <code>list-sessions</code>.</li>
+      <li><strong>Live metryki:</strong> uptime, last cmd, CPU%, Mem.</li>
+      <li><strong>Kill</strong> z potwierdzeniem (default: cancel).</li>
+      <li><strong>New</strong> auto-przydziela najniższy wolny F-slot.</li>
+      <li><strong>Slot vs. session</strong> — wolne F6/F7/F9/F10 widoczne jako placeholder.</li>
+      <li><strong>Sleep state</strong> — kompatybilny z auto-suspend.</li>
+      <li><strong>Numeric jump</strong> — <code>5</code> stawia kursor na F5.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============== F12 ============== -->
+<h2>F12 — Help (which-key style)</h2>
+
+<div class="callout bad">
+  <strong>Stan obecny:</strong> sesja <code>help</code> trzymana <code>sleep infinity</code>,
+  ścianka tekstu <code>cat &lt;&lt;EOF</code>, statyczna, mówi „F1–F7" gdy bindingi są dla F1–F10.
+</div>
+
+<div class="term">
+  <div class="term-titlebar">
+    <div class="traffic"><span></span><span></span><span></span></div>
+    <span style="margin-left:8px">pTTY popup · 80% × 80% · auto-generated z tmux list-keys</span>
+  </div>
+  <div class="term-body">┌─ <span class="accent">pTTY Help</span> ──────────────────────────────────────  <span class="key">[/]</span> <span class="dim">search</span>  <span class="key">[g]</span> <span class="dim">group</span>  <span class="key">[q]</span> <span class="dim">close</span> ─┐
+│                                                                                       │
+│   <span class="dim">NAVIGATION</span>                                                                          │
+│     <span class="key">F1</span> .. <span class="key">F10</span>                  jump to console 1..10                                  │
+│     <span class="key">Ctrl+←</span> <span class="key">Ctrl+→</span>             prev / next console                                    │
+│     <span class="key">Ctrl+L</span>                     last console                                           │
+│                                                                                       │
+│   <span class="dim">MANAGEMENT</span>                                                                          │
+│     <span class="key">F11</span>                        open Manager (popup)                                  │
+│     <span class="key">Ctrl+R</span>                     restart current console (confirm)                     │
+│     <span class="key">Ctrl+D</span>                     safe detach                                           │
+│     <span class="key">Ctrl+N</span>                     new console (next free F-slot)                        │
+│                                                                                       │
+│   <span class="dim">DISPLAY</span>                                                                             │
+│     <span class="key">F12</span>                        this help (toggle)                                    │
+│     <span class="key">Ctrl+H</span>                     shortcuts cheat-sheet                                 │
+│     <span class="key">Ctrl+Alt+R</span>                 reset terminal                                        │
+│                                                                                       │
+│   <span class="dim">TMUX PREFIX</span> <span class="muted">(Ctrl+B then …)</span>                                                          │
+│     <span class="key">1</span> .. <span class="key">0</span>                     jump to console 1..10                                 │
+│     <span class="key">S</span>                          session tree picker                                   │
+│     <span class="key">L</span>                          last session                                          │
+│                                                                                       │
+│   <span class="muted">────────────────────────────────────────────────────────────────────────</span>            │
+│   <span class="dim">pTTY v0.2 · github.com/zentala/ptty · by zentala</span>                                    │
+│                                                                                       │
+└───────────────────────────────────────────────────────────────────────────────────────┘</div>
+</div>
+
+<div class="grid-2" style="margin-top:18px">
+  <div>
+    <h3>Co tu się dzieje</h3>
+    <ul>
+      <li><strong>Auto-generowane</strong> z <code>tmux list-keys -T root</code> + adnotacje
+          <code># @group: navigation @desc: …</code> w <code>tmux.conf</code>.</li>
+      <li><strong>Live</strong> — odzwierciedla bieżący config, nie stary docstring.</li>
+      <li><strong>Searchable</strong> — <code>/</code> filtruje fuzzy.</li>
+      <li><strong>Groupable</strong> — <code>g</code> przełącza grupowanie (kategoria / alfa / by-key).</li>
+      <li><strong>Toggle</strong> — F12 otwiera i zamyka tym samym klawiszem.</li>
+      <li><strong>Brak <code>sleep infinity</code></strong>, brak pseudo-sesji.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Plugin alternative</h3>
+    <p><code>alberti42/tmux-which-key</code> robi 80% tego z pudełka — Task 016 mówi
+       „prototyp obu, decyzja przed v0.2 freeze". Własna implementacja daje pełną
+       kontrolę nad layoutem; plugin oszczędza czas.</p>
+  </div>
+</div>
+
+<hr>
+
+<!-- ============== Reviews ============== -->
+<div class="review ceo">
+  <h2>CEO Review<span class="badge">PRODUCT</span></h2>
+  <span class="verdict go">VERDICT: GO (with conditions)</span>
+
+  <h3>Why this matters</h3>
+  <p>pTTY's pitch is „SSH + reboot? Twoja sesja żyje". F11 i F12 to <strong>jedyne</strong>
+     interaktywne UI projektu. Dziś F11 jest dwustopniowe, F12 jest statycznym tekstem,
+     oba są <em>zepsute</em> (Task 013 — paths). Pierwsze wrażenie z release'u v0.2 zależy
+     od tych dwóch ekranów. Reszta projektu to plumbing.</p>
+
+  <h3>Strategiczna ocena</h3>
+  <table class="kv">
+    <tr><td>Time-to-„wow"</td><td>F11-popup z metrykami daje <strong>natychmiastowe</strong>
+        poczucie kontroli. Demo-friendly. Tweet-friendly.</td></tr>
+    <tr><td>Differentiation</td><td>vs. gołe tmux: branding (pTTY), uptime/CPU per-console,
+        slot-aware. vs. Zellij: lżejsze, bash-only, instaluje się w 30s.</td></tr>
+    <tr><td>Story do README</td><td>Animowany GIF F11 robi robotę. F12 which-key — drugi GIF.
+        Bez tego release ma <em>trzy strony tekstu</em> i nic do pokazania.</td></tr>
+    <tr><td>Risk</td><td>Single-key UX odkrywany na bieżąco; trzeba dobry on-boarding
+        (pierwsze otwarcie F11 → tooltip „press ? for help").</td></tr>
+  </table>
+
+  <h3>Conditions</h3>
+  <ol>
+    <li><strong>Task 013 ship-blocker</strong> — bez tego v0.2 nie ma sensu, bo nikt nie zobaczy F11/F12.</li>
+    <li><strong>Asset budget</strong> — 2 GIF-y do README (F11 demo, F12 demo) przed merge'em do master.</li>
+    <li><strong>Decision:</strong> sessionx adopt vs. own — <em>nie</em> zwlekać, decyzja w tym sprincie.
+        Każdy tydzień własnej implementacji to tydzień nieukończonego release'u.</li>
+    <li><strong>Naming</strong> — jeśli rename (Task 012) idzie razem z v0.2, F11/F12 muszą
+        pokazywać „pTTY" w tytule popup. Spójność marki w pierwszym kontakcie.</li>
+  </ol>
+
+  <h3>Co odpuszczam (na teraz)</h3>
+  <ul>
+    <li>Multi-select w managerze — v0.3.</li>
+    <li>Drag-to-reorder F-slots — v0.3.</li>
+    <li>Go rewrite — v1.0 (Task 017), nie blokuje.</li>
+  </ul>
+</div>
+
+<div class="review eng">
+  <h2>Engineering Review<span class="badge">TECH</span></h2>
+  <span class="verdict conditional">VERDICT: CONDITIONAL GO</span>
+
+  <h3>Architecture call-outs</h3>
+  <table class="kv">
+    <tr><td>Path universality</td><td>
+      <code>set-environment -g PTTY_DIR</code> + sed-template w <code>install.sh</code>
+      to standard. <strong>OK.</strong> Egzekwować <code>grep -r "vps/sessions"</code>
+      w pre-commit / CI — żaden hardcode się nie wśliźnie.
+    </td></tr>
+    <tr><td>Popup compat</td><td>
+      tmux ≥ 3.2 wymagane. Repo dziś ma fallback (<code>display-popup -h 1 'echo test'</code>)
+      do split-window — <strong>zachować</strong> dla starych distro (Debian 11 ma 3.1!).
+      F11/F12 w tym samym wzorcu co Ctrl+H.
+    </td></tr>
+    <tr><td>Fzf vs. gum vs. own</td><td>
+      Bash + fzf <code>--bind</code> obsłuży 100% F11. Gum dla F12 (lepsze grupowanie).
+      <strong>Nie wprowadzać Go w v0.2</strong> (Task 017 = v1.0).
+    </td></tr>
+    <tr><td>Stale parsing</td><td>
+      Dziś <code>awk '{print $3}'</code> z display rows = bomba. Przepisać: każdy wiersz
+      to <code>$F_KEY\t$STATUS\t$SESSION\t$JSON</code>, fzf renderuje przez format spec,
+      akcje czytają tab-separated → solidnie.
+    </td></tr>
+    <tr><td>Help auto-gen</td><td>
+      Annotation w <code>tmux.conf</code>: <code># @group:nav @desc:Jump to console 1</code>.
+      Parser w bash, 30 linii. Jeden punkt prawdy = klucz w conf, nie duplikowany w docstr.
+    </td></tr>
+    <tr><td>Tests</td><td>
+      bats (już zaplanowane w Task 004). Smoke: <code>tmux -f tmux.conf send-keys C-F11</code>,
+      <code>tmux capture-pane</code>, assert że nagłówek <code>pTTY Manager</code> się pojawia.
+      Nie testować pikseli, testować tekst.
+    </td></tr>
+  </table>
+
+  <h3>Risks &amp; mitigations</h3>
+  <ul>
+    <li><strong>tmux 3.0/3.1 users</strong> (Debian 11, RHEL 8) — popup nie istnieje.
+        Mitigation: detekcja jak Ctrl+H, fallback do split-window. <em>Nie blokować popup-only release'u
+        na starych systemach</em>; dokumentacja minimalnej wersji.</li>
+    <li><strong>fzf version skew</strong> — stare fzf nie ma <code>--bind reload</code>.
+        install.sh sprawdza <code>fzf --version &gt;= 0.30</code>, podpowiada upgrade.</li>
+    <li><strong>Race podczas restart</strong> — obecny <code>mission-control.sh</code> używa lock-file
+        (<code>$temp_dir/restart-${session}.lock</code>). Zachować, dorobić timeout+cleanup w trapach.</li>
+    <li><strong>Single-key destructive (K)</strong> — <em>zawsze</em> confirm dialog,
+        default: Cancel (kursor na „No"). <code>:</code> jako command-prompt na destrukty
+        długim hasłem? overkill na razie.</li>
+  </ul>
+
+  <h3>Sequencing (1 sprint)</h3>
+  <ol>
+    <li>Task 013 (paths) — 1 dzień.</li>
+    <li>Task 014 (F11 popup) — 3 dni: list builder → fzf bindings → confirm dialogi → metryki.</li>
+    <li>Task 015 (F12 which-key) — 2 dni: parser + renderer.</li>
+    <li>Task 016 (plugin eval) — równolegle, 2 dni research.</li>
+    <li>bats smoke — 1 dzień.</li>
+  </ol>
+  <p><em>Razem: ~9 dni roboczych do v0.2 GO.</em></p>
+</div>
+
+<hr>
+
+<h2>Decyzje do potwierdzenia (Ty)</h2>
+<ol>
+  <li><strong>Wzorzec ścieżek</strong> — env-var <code>PTTY_DIR</code> + sed-template? (vs. symlink, vs. config file)</li>
+  <li><strong>Plugin czy własne</strong> — F11: sessionx? F12: tmux-which-key? Albo własne?</li>
+  <li><strong>Vi-conflict</strong> — zostawić <code>k</code> = up i <code>K</code> = kill,
+      czy przemapować kill na <code>x</code> / <code>d</code>?</li>
+  <li><strong>tmux 3.1 fallback</strong> — popup-only (clean), czy wspierać split-window?</li>
+  <li><strong>Branding</strong> — popup tytuł „pTTY Manager" (po rename Task 012) czy
+      „Persistent Console" (zachowawczo)?</li>
+</ol>
+
+<div class="footer">
+  Mockup · pTTY v0.2 planning · 2026-05-08 ·
+  <code>02-planning/mockups/f11-f12-redesign.html</code>
+</div>
+
+</div>
+</body>
+</html>

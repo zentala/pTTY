@@ -277,6 +277,22 @@
 - Contributions guide
 - Website structure
 
+**Pre-release rename:**
+- **[012-rename-repo-to-ptty.md](012-rename-repo-to-ptty.md)** — Rename repo `tmux-persistent-console` → `ptty` (persistent TTY). Update GitHub repo, `package.json`/scripts, install paths (`~/.tmux-persistent-console` → `~/.ptty`), service file `tmux-console.service` → `ptty.service`, README, docs, GitHub Pages domain. Coordinate with v0.2 release.
+
+**📜 Epic:** [.plan/epic-v0.2-ptty/](../.plan/epic-v0.2-ptty/) — full v0.2 deep refactor (PRD + ARCHITECTURE + REVIEW + 7 wave files). Decisions locked Q1–Q5 (env-var paths, hybrid plugins, K=kill, popup-only, pTTY rebrand). 5 waves, ~9 days. Start with [wave-1-paths.md](../.plan/epic-v0.2-ptty/wave-1-paths.md) (BLOCKER).
+
+**🔴 BLOCKERS for v0.2:**
+- **[013-fix-path-mismatch-universal.md](013-fix-path-mismatch-universal.md)** — `tmux.conf` references `~/.vps/sessions/...` (broken). Fix via `PTTY_DIR` env-var templating in install.sh. Currently F11/F12/Ctrl+H/Ctrl+R all silently fail.
+
+**F11/F12 redesign (v0.2):**
+- **[014-f11-popup-redesign.md](014-f11-popup-redesign.md)** — F11 Manager: popup overlay (no pseudo-session), single-key actions (Enter/K kill/r restart/n new/R rename), live metrics (uptime, CPU, last cmd).
+- **[015-f12-which-key-help.md](015-f12-which-key-help.md)** — F12 Help: which-key style popup, auto-generated from `tmux list-keys`, grouped, searchable, replaces static text wall + `sleep infinity`.
+
+**Strategic:**
+- **[016-tmux-plugins-evaluation.md](016-tmux-plugins-evaluation.md)** — Evaluate sessionx / which-key / resurrect+continuum vs. own implementation (v0.3).
+- **[017-rewrite-in-go.md](017-rewrite-in-go.md)** — Long-term: rewrite in Go + bubbletea, single static binary (v1.0).
+
 ---
 
 **Current Phase:** ⚠️ UX Design (v0.2 planning)

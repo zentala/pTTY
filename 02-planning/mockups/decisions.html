@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>pTTY · Decisions to make</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel-2: #1c232c;
+    --border: #2d3640;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --text-faint: #545d66;
+    --accent: #4cc2ff;
+    --good: #7ee787;
+    --warn: #f0b86e;
+    --bad: #ff7b72;
+    --rec-bg: #11271a;
+    --rec-border: #2d6a3e;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg); color: var(--text); margin: 0; padding: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .page { max-width: 1080px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .lede { color: var(--text-dim); font-size: 16px; max-width: 70ch; margin: 0 0 32px; }
+  .meta {
+    color: var(--text-faint); font-size: 12px;
+    margin-bottom: 32px;
+    display: flex; gap: 18px; flex-wrap: wrap;
+  }
+  .meta b { color: var(--text-dim); font-weight: 500; }
+  code {
+    background: var(--panel); padding: 2px 6px; border-radius: 4px;
+    color: var(--accent); font-size: 0.9em;
+    font-family: "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+  }
+  pre {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: 12px 14px; overflow-x: auto;
+    font-family: "JetBrains Mono", "Fira Code", ui-monospace, Menlo, monospace;
+    font-size: 12.5px; color: var(--text);
+  }
+  .decision {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 26px 30px;
+    margin: 24px 0;
+    box-shadow: 0 8px 24px -12px #0008;
+  }
+  .decision h2 {
+    margin: 0 0 4px; font-size: 22px; letter-spacing: -0.01em;
+  }
+  .decision .qid {
+    display: inline-block;
+    background: var(--accent); color: #0e1116;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    padding: 3px 9px; border-radius: 999px;
+    vertical-align: middle; margin-right: 10px;
+  }
+  .decision .question { color: var(--text-dim); font-size: 15px; margin: 6px 0 22px; }
+
+  .opts { display: grid; gap: 12px; margin: 12px 0 18px; grid-template-columns: 1fr; }
+  @media (min-width: 760px) {
+    .opts.two { grid-template-columns: 1fr 1fr; }
+    .opts.three { grid-template-columns: 1fr 1fr 1fr; }
+  }
+  .opt {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    position: relative;
+  }
+  .opt h3 {
+    margin: 0 0 4px; font-size: 15px; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .opt .tag {
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .tag.rec { background: var(--good); color: #0e1116; }
+  .tag.no { background: var(--bad); color: #0e1116; }
+  .tag.maybe { background: var(--warn); color: #0e1116; }
+  .opt.recommended {
+    background: var(--rec-bg);
+    border-color: var(--rec-border);
+    box-shadow: 0 0 0 1px var(--rec-border) inset;
+  }
+  .opt p, .opt ul { color: var(--text-dim); font-size: 13.5px; line-height: 1.55; margin: 6px 0; }
+  .opt ul { padding-left: 18px; }
+  .opt ul li::marker { color: var(--text-faint); }
+  .opt .pros li { color: #b6e3c4; }
+  .opt .cons li { color: #f7c4be; }
+  .opt h4 {
+    margin: 12px 0 4px; font-size: 11px;
+    color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .rec-box {
+    margin-top: 18px;
+    background: #14181f;
+    border-left: 3px solid var(--good);
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+  }
+  .rec-box h4 {
+    margin: 0 0 6px; color: var(--good);
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .rec-box p { margin: 4px 0; color: var(--text); font-size: 14px; line-height: 1.6; }
+
+  .decide-row {
+    margin-top: 18px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+    padding-top: 16px; border-top: 1px dashed var(--border);
+    align-items: center;
+  }
+  .decide-row .lbl {
+    color: var(--text-faint); font-size: 12px;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-right: 4px;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text-dim);
+    font-size: 13px; cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .pill:hover { border-color: var(--accent); color: var(--text); }
+  .pill input { display: none; }
+  .pill input:checked + span { color: var(--good); font-weight: 600; }
+  .pill:has(input:checked) {
+    background: #14271a; border-color: var(--good);
+  }
+  .notes {
+    width: 100%; min-height: 56px;
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; font-family: inherit; font-size: 13px;
+    margin-top: 10px; resize: vertical;
+  }
+  .notes:focus { outline: none; border-color: var(--accent); }
+
+  .summary {
+    margin-top: 48px;
+    background: linear-gradient(180deg, #14181f, #0e1116);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 26px 30px;
+  }
+  .summary h2 { margin-top: 0; }
+  .summary table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 12px; }
+  .summary th, .summary td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .summary th { color: var(--text-faint); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+  .summary td { color: var(--text); }
+  .summary td:first-child { color: var(--text-dim); font-family: ui-monospace, monospace; font-size: 12px; }
+  .summary .rec-cell { color: var(--good); font-weight: 600; }
+
+  .actions {
+    margin-top: 24px;
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .btn {
+    padding: 10px 18px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--panel-2); color: var(--text); cursor: pointer;
+    font-size: 14px; font-weight: 500;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #0e1116; border-color: var(--accent); }
+  .btn.primary:hover { background: #6dcfff; }
+
+  .footer { text-align: center; color: var(--text-faint); font-size: 12px; margin-top: 64px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Decyzje do podjęcia</h1>
+<p class="lede">
+  Pięć rozstrzygnięć blokujących start refaktora F11/F12. Każde ma opcje, plusy/minusy
+  i moją rekomendację. Zaznacz wybór, dopisz uwagę, wróć do mnie.
+</p>
+<div class="meta">
+  <span><b>Repo:</b> tmux-persistent-console (→ pTTY)</span>
+  <span><b>Sprint:</b> v0.2</span>
+  <span><b>Wymaga decyzji przed:</b> Task 013 (path fix)</span>
+  <span><b>Data:</b> 2026-05-08</span>
+</div>
+
+<!-- ============ Q1: PATHS ============ -->
+<div class="decision">
+  <h2><span class="qid">Q1</span>Wzorzec uniwersalnych ścieżek</h2>
+  <p class="question">Jak <code>tmux.conf</code> ma znaleźć skrypty pTTY niezależnie od miejsca instalacji?</p>
+
+  <div class="opts three">
+    <div class="opt recommended">
+      <h3>A. Env-var <code>PTTY_DIR</code> + sed-template <span class="tag rec">REKOMENDACJA</span></h3>
+      <p>Pierwsza linia conf: <code>set-environment -g PTTY_DIR "__PTTY_DIR__"</code>.
+         <code>install.sh</code> robi <code>sed</code> przy instalacji, podmienia placeholder.
+         Bindingi: <code>#{PTTY_DIR}/src/foo.sh</code>.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Natywny tmux mechanizm, format-spec działa w <code>run-shell</code> i <code>display-popup</code></li>
+        <li>Jeden punkt prawdy — zmienna w sesji, nie ścieżka rozsiana po 20 plikach</li>
+        <li>Override przez env: <code>PTTY_DIR=$PWD ./install.sh</code> dla dev</li>
+        <li>Czytelne w debug: <code>tmux show-environment -g PTTY_DIR</code></li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Wymaga kroku <code>sed</code> w instalatorze (drobna złożoność)</li>
+        <li><code>tmux.conf</code> w repo zawiera placeholder — nie odpalisz „raw" bez install</li>
+      </ul>
+    </div>
+
+    <div class="opt">
+      <h3>B. Symlink do <code>~/.ptty</code> <span class="tag maybe">OK</span></h3>
+      <p><code>install.sh</code> tworzy <code>ln -s $PWD ~/.ptty</code>. Wszystkie ścieżki w conf
+         hardcoded na <code>~/.ptty/...</code>.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Najprostszy do napisania (1 linia w installerze)</li>
+        <li><code>tmux.conf</code> w repo działa „raw" jeśli zrobisz sym­link ręcznie</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Narzuca konwencję — user nie może zainstalować w <code>/opt/ptty</code> bez kombinacji</li>
+        <li>Symlinki w <code>$HOME</code> bywają problemem przy backupach / sync (Dropbox, Syncthing)</li>
+        <li>Łamie się przy wielu instancjach (test + prod na tym samym koncie)</li>
+      </ul>
+    </div>
+
+    <div class="opt">
+      <h3>C. Config file <code>~/.config/ptty/dir</code> <span class="tag no">SKIP</span></h3>
+      <p>Każdy skrypt zaczyna od <code>PTTY_DIR=$(cat ~/.config/ptty/dir)</code>.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Najbardziej elastyczny — wiele instancji, runtime override</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Ekstra plik, ekstra I/O w każdym skrypcie</li>
+        <li>tmux.conf nadal nie wie o tej ścieżce — trzeba i tak template'ować</li>
+        <li>Over-engineering jak na ten problem</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rec-box">
+    <h4>Moja rekomendacja</h4>
+    <p><strong>A — env-var + sed-template.</strong> Jednorazowy koszt w installerze, czyste
+       runtime, zero magii w skryptach. To wzorzec używany przez TPM, oh-my-zsh, neovim plugins.</p>
+  </div>
+
+  <div class="decide-row">
+    <span class="lbl">Twój wybór:</span>
+    <label class="pill"><input type="radio" name="q1"><span>A · env-var (rec)</span></label>
+    <label class="pill"><input type="radio" name="q1"><span>B · symlink</span></label>
+    <label class="pill"><input type="radio" name="q1"><span>C · config file</span></label>
+  </div>
+  <textarea class="notes" placeholder="Uwagi / kontrpropozycja…"></textarea>
+</div>
+
+<!-- ============ Q2: PLUGINS ============ -->
+<div class="decision">
+  <h2><span class="qid">Q2</span>Plugin czy własna implementacja</h2>
+  <p class="question">F11 (Manager) i F12 (Help) — adoptować istniejące pluginy tmux czy budować od zera?</p>
+
+  <div class="opts two">
+    <div class="opt">
+      <h3>A. Adopt: <code>sessionx</code> + <code>which-key</code> <span class="tag maybe">FAST</span></h3>
+      <p><code>omerxx/tmux-sessionx</code> dla F11, <code>alberti42/tmux-which-key</code> dla F12.
+         Instalujemy przez TPM w <code>install.sh</code>.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Time-to-ship: 2 dni vs. 7 dni</li>
+        <li>Maintained externally, my dostajemy bug-fixy za darmo</li>
+        <li>Sprawdzone na tysiącach setupów — corner cases już znalezione</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Sessionx <em>nie</em> ma kolumn z metrykami (CPU, Mem, last cmd) — branding/UX podstawowy</li>
+        <li>Sessionx pokazuje wszystkie sesje tmux, nie zna konceptu „F-slot 1..10" pTTY</li>
+        <li>Which-key wymaga osobnego pliku z keymapą — duplikuje <code>tmux.conf</code></li>
+        <li>Dwie kolejne zależności w <code>install.sh</code>, więcej rzeczy może paść</li>
+        <li>pTTY traci tożsamość — wygląda jak „tmux z pluginami", a ma być produktem</li>
+      </ul>
+    </div>
+
+    <div class="opt recommended">
+      <h3>B. Hybryda: własny F11, plugin F12 <span class="tag rec">REKOMENDACJA</span></h3>
+      <p>F11 (Manager) własny — <strong>core differentiator</strong> pTTY (F-sloty, metryki, sleep state).
+         F12 (Help) na <code>tmux-which-key</code> — pomocny, ale nie buduje marki.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>F11 = nasz „wow", pełna kontrola UX, GIF do README</li>
+        <li>F12 = solved problem, nie wymyślamy koła</li>
+        <li>Time-to-ship realistyczny: ~5 dni</li>
+        <li>Mniejsza powierzchnia własnego kodu = mniejszy maintenance</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Dwa style estetyki w popupach (own vs. plugin) — trzeba pilnować spójności</li>
+        <li>Eval which-key trzeba zrobić zanim się commit­niesz (Task 016)</li>
+      </ul>
+    </div>
+
+    <div class="opt">
+      <h3>C. Wszystko własne <span class="tag maybe">PURE</span></h3>
+      <p>F11 i F12 napisane w pTTY, zero pluginów tmux poza TPM (dla resurrect+continuum).</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Maksymalna kontrola, zero kompromisów estetycznych</li>
+        <li>Mniej zależności do install</li>
+        <li>Najczystsza tożsamość produktu</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>+5 dni pracy na F12 którego nikt poza pTTY nie odróżni od which-key</li>
+        <li>My utrzymujemy parser <code>list-keys</code>, fuzzy filter, grupowanie — wszystko</li>
+        <li>Risk: F12 ląduje w „good enough", podczas gdy plugin jest „polished"</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rec-box">
+    <h4>Moja rekomendacja</h4>
+    <p><strong>B — hybryda.</strong> Zasada: own to co buduje markę i daje USP (F11 z F-slotami i metrykami),
+       adopt to co jest commodity (F12 = lista keybindów). Zachowujemy resurrect+continuum jako adopt
+       (Task 016), bo „persistent" branding tego wymaga.</p>
+  </div>
+
+  <div class="decide-row">
+    <span class="lbl">Twój wybór:</span>
+    <label class="pill"><input type="radio" name="q2"><span>A · oba pluginy</span></label>
+    <label class="pill"><input type="radio" name="q2"><span>B · hybryda (rec)</span></label>
+    <label class="pill"><input type="radio" name="q2"><span>C · oba własne</span></label>
+  </div>
+  <textarea class="notes" placeholder="Uwagi / kontrpropozycja…"></textarea>
+</div>
+
+<!-- ============ Q3: KILL KEY ============ -->
+<div class="decision">
+  <h2><span class="qid">Q3</span>Klawisz „kill" w F11</h2>
+  <p class="question">vi-style <code>j/k</code> nawigacja koliduje z naturalnym <code>k</code> = kill.
+     Jak to rozwiązać?</p>
+
+  <div class="opts three">
+    <div class="opt recommended">
+      <h3>A. <code>K</code> (shift) <span class="tag rec">REKOMENDACJA</span></h3>
+      <p>Mała <code>k</code> = up (vi), duża <code>K</code> = kill. Standard w lazygit, k9s, btop.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Konwencja TUI — userzy lazygit/k9s znają wzorzec</li>
+        <li>Shift = „intent" = naturalny gating dla destrukcji</li>
+        <li>Mnemonic: K**ill</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Trzeba pamiętać o shift — sub-second slower vs. plain key</li>
+      </ul>
+    </div>
+
+    <div class="opt">
+      <h3>B. <code>x</code> = kill <span class="tag maybe">OK</span></h3>
+      <p>Wzorzec z vim (<code>x</code> = delete char), gh CLI, niektórych file managerów.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Bez shift, szybsze</li>
+        <li>Mnemonic: <strong>x</strong>terminate</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Niespójne z lazygit/k9s ekosystemem</li>
+        <li>Pojedynczy klawisz na destrukcję = większe ryzyko mistype (mimo confirm)</li>
+      </ul>
+    </div>
+
+    <div class="opt">
+      <h3>C. <code>d</code> = kill (delete) <span class="tag no">SKIP</span></h3>
+      <p>Wzorzec mutt, ranger, niektórych mail clientów.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Mnemonic: <strong>d</strong>elete</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Konflikt z <code>Ctrl+D</code> (safe detach) — confusing</li>
+        <li>vim: <code>dd</code> = cut line — nie kill, ale podobnie destrukcyjne, miesza modele</li>
+        <li>„delete" sugeruje że można undo — kill sesji jest final</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rec-box">
+    <h4>Moja rekomendacja</h4>
+    <p><strong>A — <code>K</code> (shift).</strong> Spójność z lazygit/k9s, naturalny gating
+       przez shift, mnemonic. Zostawiamy <code>k</code> = up dla vi-people, którzy są dominującą
+       populacją w terminalu.</p>
+  </div>
+
+  <div class="decide-row">
+    <span class="lbl">Twój wybór:</span>
+    <label class="pill"><input type="radio" name="q3"><span>A · K shift (rec)</span></label>
+    <label class="pill"><input type="radio" name="q3"><span>B · x</span></label>
+    <label class="pill"><input type="radio" name="q3"><span>C · d</span></label>
+  </div>
+  <textarea class="notes" placeholder="Uwagi / kontrpropozycja…"></textarea>
+</div>
+
+<!-- ============ Q4: TMUX 3.1 ============ -->
+<div class="decision">
+  <h2><span class="qid">Q4</span>Wsparcie dla tmux &lt; 3.2 (Debian 11, RHEL 8)</h2>
+  <p class="question"><code>display-popup</code> dodano w tmux 3.2. Debian 11 ma 3.1, RHEL 8 ma 2.7.
+     Czy wspieramy fallback?</p>
+
+  <div class="opts two">
+    <div class="opt recommended">
+      <h3>A. Popup-only, dokumentacja minimalnej wersji <span class="tag rec">REKOMENDACJA</span></h3>
+      <p>README mówi „tmux ≥ 3.2 wymagane". <code>install.sh</code> sprawdza wersję, blokuje
+         instalację z czytelnym komunikatem + linkiem do upgrade'u.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Jeden code path, czysty kod, łatwo testować</li>
+        <li>tmux 3.2 wyszedł 2021-02 — ma 5 lat, każde aktualne distro ma nowszy</li>
+        <li>Debian 11 (Bullseye) ma <strong>EOL czerwiec 2026</strong> — irrelewantne dla v0.2 release'u</li>
+        <li>Backport tmux jest trywialny (<code>apt install tmux</code> z bullseye-backports)</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Część korpo userów na RHEL 8 / Amazon Linux 2 nie zainstaluje bez sudo</li>
+      </ul>
+    </div>
+
+    <div class="opt">
+      <h3>B. Dual code path: popup + split-window fallback <span class="tag maybe">SAFE</span></h3>
+      <p>Detekcja jak w obecnym <code>Ctrl+H</code>: <code>display-popup -h 1 'echo test'</code>,
+         jeśli failuje → <code>split-window</code>. Każda funkcja ma dwie ścieżki.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Działa wszędzie, włącznie z legacy</li>
+        <li>Wzorzec już użyty w repo (Ctrl+H, Ctrl+R)</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>2× tyle kodu, 2× tyle testów, 2× tyle bugów</li>
+        <li>UX w split-window jest <em>znacząco gorszy</em> — popup overlay vs. dzielenie pane'a</li>
+        <li>Część funkcji popupa (filter, scrollback) nie ma sensu w split — degradacja niespójna</li>
+        <li>Long-term ciężar: każdy nowy feature ma dwie implementacje</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rec-box">
+    <h4>Moja rekomendacja</h4>
+    <p><strong>A — popup-only.</strong> tmux 3.2 jest stary, fallback to <em>permanentny</em> długo
+       po tym jak Debian 11 umrze. Lepszy build kontaktu („wymaga tmux ≥ 3.2 — oto jak zainstalować")
+       niż wieczny dwu-tor.</p>
+    <p style="margin-top:8px"><strong>Ale:</strong> w <code>install.sh</code> daj
+       <em>copy-paste'owalne</em> komendy upgrade'u dla popularnych distro:
+       Debian/Ubuntu (backports), RHEL (EPEL/source), macOS (brew). To 20 linii bash, zamyka temat.</p>
+  </div>
+
+  <div class="decide-row">
+    <span class="lbl">Twój wybór:</span>
+    <label class="pill"><input type="radio" name="q4"><span>A · popup-only (rec)</span></label>
+    <label class="pill"><input type="radio" name="q4"><span>B · dual fallback</span></label>
+  </div>
+  <textarea class="notes" placeholder="Uwagi / kontrpropozycja…"></textarea>
+</div>
+
+<!-- ============ Q5: BRANDING ============ -->
+<div class="decision">
+  <h2><span class="qid">Q5</span>Tytuł popupa &amp; branding</h2>
+  <p class="question">Co pokazujemy w nagłówku F11/F12 i innych powierzchniach?</p>
+
+  <div class="opts two">
+    <div class="opt recommended">
+      <h3>A. „pTTY" — pełny rebrand z v0.2 <span class="tag rec">REKOMENDACJA</span></h3>
+      <p>Popup tytuł: <code>pTTY Manager</code>, <code>pTTY Help</code>. README, install,
+         GitHub repo, GitHub Pages — wszystko jako pTTY (Task 012).</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Jeden release = jedna spójna marka, brak okresu „też się nazywa…"</li>
+        <li>v0.2 to pierwsza publiczna wersja — najlepszy moment</li>
+        <li>Krótko, brand-friendly, domena <code>ptty.zentala.io</code> już zaplanowana</li>
+        <li>Technicznie precyzyjne (persistent pseudo-TTY)</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Trzeba zrobić rename razem (Task 012 + 013 + 014 + 015 = jeden release)</li>
+        <li>GitHub redirect zadziała ze starym URL, ale stare gwiazdki/issues są pod starą nazwą</li>
+      </ul>
+    </div>
+
+    <div class="opt">
+      <h3>B. „Persistent Console" zachowawczo <span class="tag maybe">SAFE</span></h3>
+      <p>Popup: <code>Persistent Console — Manager</code>. Rename na pTTY w v0.3.</p>
+      <h4>Plusy</h4>
+      <ul class="pros">
+        <li>Mniej zmian w v0.2, mniej ryzyka regresji</li>
+        <li>Można zobaczyć reakcję community na obecną nazwę przed rebrandingiem</li>
+      </ul>
+      <h4>Minusy</h4>
+      <ul class="cons">
+        <li>Dwie zmiany marki w 2 release'ach = dwa razy zamieszanie</li>
+        <li>„Persistent Console" jest długie, w popupie wygląda ciężko</li>
+        <li>v0.2 launch będzie pod „starą" nazwą, momentum przepada przy v0.3 rename</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rec-box">
+    <h4>Moja rekomendacja</h4>
+    <p><strong>A — pełny rebrand z v0.2.</strong> Pierwsza publiczna wersja to najlepszy i jedyny
+       tani moment na rename. Każdy późniejszy rebranding kosztuje 10× tyle (issues, blog posts,
+       linki, pamięć użytkowników). Task 012 + 013 + 014 + 015 jako jeden „v0.2 = pTTY launch".</p>
+  </div>
+
+  <div class="decide-row">
+    <span class="lbl">Twój wybór:</span>
+    <label class="pill"><input type="radio" name="q5"><span>A · pTTY teraz (rec)</span></label>
+    <label class="pill"><input type="radio" name="q5"><span>B · Persistent Console na razie</span></label>
+  </div>
+  <textarea class="notes" placeholder="Uwagi / kontrpropozycja…"></textarea>
+</div>
+
+<!-- ============ SUMMARY ============ -->
+<div class="summary">
+  <h2>Podsumowanie rekomendacji</h2>
+  <table>
+    <thead>
+      <tr><th style="width:80px">#</th><th>Pytanie</th><th>Rekomendacja</th><th>Powód w 1 zdaniu</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Q1</td>
+        <td>Wzorzec ścieżek</td>
+        <td class="rec-cell">A · env-var <code>PTTY_DIR</code></td>
+        <td>Natywny tmux, jeden punkt prawdy, dev-friendly override</td>
+      </tr>
+      <tr>
+        <td>Q2</td>
+        <td>Plugin czy własne</td>
+        <td class="rec-cell">B · hybryda (own F11, plugin F12)</td>
+        <td>Own = co buduje markę; adopt = co jest commodity</td>
+      </tr>
+      <tr>
+        <td>Q3</td>
+        <td>Kill key</td>
+        <td class="rec-cell">A · <code>K</code> (shift)</td>
+        <td>Konwencja lazygit/k9s, shift = gating destrukcji</td>
+      </tr>
+      <tr>
+        <td>Q4</td>
+        <td>tmux &lt; 3.2 fallback</td>
+        <td class="rec-cell">A · popup-only</td>
+        <td>tmux 3.2 ma 5 lat, dual code path = wieczny ciężar</td>
+      </tr>
+      <tr>
+        <td>Q5</td>
+        <td>Branding popupów</td>
+        <td class="rec-cell">A · pTTY z v0.2</td>
+        <td>Pierwszy public release = najtańszy moment na rename</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top:18px; color: var(--text-dim); font-size: 14px;">
+    <strong style="color:var(--text)">Konsekwencja wszystkich rekomendacji A/B/A/A/A:</strong>
+    v0.2 = „pTTY launch release" — rename + path fix + popup F11 (own) + popup F12 (which-key plugin),
+    tmux ≥ 3.2 wymagane. Sprint ~9 dni roboczych (Task 013→014→015 + plugin eval równolegle).
+  </p>
+
+  <div class="actions">
+    <button class="btn primary" onclick="copySummary()">📋 Skopiuj podsumowanie decyzji</button>
+    <button class="btn" onclick="window.print()">🖨️ Drukuj / PDF</button>
+  </div>
+</div>
+
+<div class="footer">
+  pTTY v0.2 · decisions doc · 2026-05-08 ·
+  <code>02-planning/mockups/decisions.html</code>
+</div>
+
+</div>
+
+<script>
+function copySummary() {
+  const choices = {};
+  document.querySelectorAll('input[type=radio]:checked').forEach(r => {
+    choices[r.name] = r.parentElement.querySelector('span').textContent;
+  });
+  const notes = {};
+  document.querySelectorAll('.decision').forEach((d, i) => {
+    const t = d.querySelector('textarea')?.value;
+    if (t) notes['q' + (i+1)] = t;
+  });
+  const out = ['pTTY v0.2 — decisions:', ''];
+  for (let i = 1; i <= 5; i++) {
+    out.push(`Q${i}: ${choices['q'+i] || '(undecided)'}`);
+    if (notes['q'+i]) out.push(`   note: ${notes['q'+i]}`);
+  }
+  navigator.clipboard.writeText(out.join('\n')).then(() => {
+    const btn = event.target;
+    const old = btn.textContent;
+    btn.textContent = '✓ Skopiowano';
+    setTimeout(() => btn.textContent = old, 1500);
+  });
+}
+</script>
+</body>
+</html>
