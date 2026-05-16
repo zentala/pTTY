@@ -1,30 +1,41 @@
-# 🖥️ Tmux Persistent Console
+# 🖥️ pTTY — Persistent terminals for AI coding
 
-> **Never lose your work when SSH crashes again!**
-> 7 persistent tmux sessions with instant Ctrl+F switching - perfect for Claude Code, AI CLI tools, and remote server management.
+> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. Reconnect with `Ctrl+F1` and pick up exactly where you left off — same conversation context, same scrollback, same running processes.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Bash](https://img.shields.io/badge/Shell-Bash-blue.svg)](https://www.gnu.org/software/bash/)
-[![Tmux](https://img.shields.io/badge/Tmux-Compatible-green.svg)](https://github.com/tmux/tmux)
+[![Built on tmux](https://img.shields.io/badge/Built%20on-tmux-green.svg)](https://github.com/tmux/tmux)
+[![Shell: Bash](https://img.shields.io/badge/Shell-Bash-blue.svg)](https://www.gnu.org/software/bash/)
 
-## 🚨 The Problem
+## The Problem
 
-Working on remote servers with AI CLI tools (Claude Code, GitHub Copilot CLI) or during system updates, and your SSH connection crashes? **You lose everything!**
+You're SSH'd into a remote server running a long Claude Code session. Your WiFi flakes for 10 seconds. SSH disconnects. You reconnect — and your AI conversation context, your scrollback, your background processes are **gone**. You rebuild context. It takes 20 minutes. Then it happens again.
 
-- Long-running operations interrupted
-- AI-assisted coding sessions lost
-- System updates leave you disconnected
-- No easy way to return to your exact workspace
+This is the daily reality of remote AI-assisted development:
 
-## ✅ The Solution
+- **SSH drops** when WiFi changes or VPN flaps
+- **Laptop sleep** kills the connection mid-session
+- **Network switches** (home → mobile → cafe) require full reconnection
+- **Accidental `exit`** in the wrong terminal destroys the session
+- All your Claude Code / Codex / Aider context lives in memory — and it dies with the connection
 
-**Tmux Persistent Console** gives you 7 persistent tmux sessions that survive anything:
+## The Solution
 
-- ✅ SSH connection drops
-- ✅ Network issues during updates
-- ✅ Server reboots
-- ✅ Long-running AI CLI operations
-- ✅ Unstable WiFi connections
+pTTY keeps the **process alive on the server** while you reconnect. tmux runs as a server process; your AI CLI runs as its child; both keep going even when SSH dies. Reconnect, hit `Ctrl+F1`, and you're back exactly where you were — same conversation, same scrollback, same running processes.
+
+### What pTTY protects you from
+
+- ✅ SSH connection drops (network instability, ISP issues, VPN flap)
+- ✅ WiFi glitches (coffee shop, train, hotel)
+- ✅ Laptop sleep (lid close, low battery, OS suspend)
+- ✅ Network changes (home WiFi → mobile hotspot → office)
+- ✅ Accidental `exit` in the wrong terminal (safe-exit confirmation)
+
+### What pTTY does NOT protect you from
+
+- ❌ Server reboot (tmux server dies → sessions lost — this is rare; ~5% of real-world session loss)
+- ❌ tmux server crash (OOM kill, manual `kill-server`)
+
+If you need crash-survivable AI sessions, that's a different product (state replication + cloud sync). pTTY is laser-focused on the 95% case: client-side disconnections.
 
 ## ✨ Features
 
@@ -34,12 +45,11 @@ Working on remote servers with AI CLI tools (Claude Code, GitHub Copilot CLI) or
 - **Ctrl+F11**: Open Manager Menu (interactive terminal manager)
 - **Ctrl+F12**: Show Help Reference (keyboard shortcuts)
 
-### 🛡️ Crash-Resistant Design
-- Sessions persist across SSH disconnects
-- Survives server reboots (with proper setup)
-- Auto-recovery from network issues
-- Work continues exactly where you left off
-- **Safe-exit protection** - prevents accidental session termination
+### 🛡️ Disconnection-Resistant Design
+- Sessions persist across SSH disconnects, WiFi changes, and laptop sleep
+- Reconnect over any new network and pick up where you left off
+- AI conversation context stays in memory on the server — not just metadata
+- **Safe-exit protection** — prevents accidental session termination via `exit`
 
 ### 🤖 AI CLI Optimized
 Perfect companion for:
@@ -53,6 +63,24 @@ Perfect companion for:
 - No complex key combinations to remember
 - Visual session indicators
 - Easy remote access setup
+
+## How pTTY Compares to Adjacent Tools
+
+| Tool | What it does | When to use it instead of pTTY |
+|------|--------------|--------------------------------|
+| **Raw tmux** | Terminal multiplexer | When you want full control and don't mind configuring everything yourself |
+| **tmuxinator** | Project setup via YAML | When you need different layouts per project (complementary to pTTY, not competitive) |
+| **tmux-resurrect** | Save/restore tmux state after server death | When server reboots are your main concern and you can tolerate losing AI conversation context (resurrect restarts processes from scratch) |
+| **zellij** | Modern tmux alternative in Rust | When you want a different multiplexer and don't need AI-CLI-optimized defaults |
+| **mosh** | SSH replacement with roaming | Complementary — solves the connection layer; pTTY solves the session layer. Use both. |
+
+**pTTY's unique combination** (no other tool has all five):
+
+1. **Zero configuration** — 5 sessions ready after one install command
+2. **Ctrl+F1–F12 direct hotkeys** — no prefix-key gymnastics; works like browser tabs
+3. **AI CLI workflow defaults** — sessions pre-labeled for AI development
+4. **Safe-exit protection** — prevents accidental session destruction
+5. **Systemd auto-start** — sessions reappear after reboot (empty, ready to use)
 
 ## 🚀 Quick Start
 
@@ -437,7 +465,7 @@ This project follows **spec-driven development**. All features and behavior are 
 
 **⭐ Star this repo if it saved your work from an SSH crash!**
 
-Made with ❤️ for remote workers, sysadmins, and AI CLI enthusiasts.
+Made with ❤️ for developers who code with AI on remote servers.
 
 **Note from the author:**
 This tool was born from my personal frustration with losing SSH sessions during unstable WiFi, laptop sleep, or moving between locations. I wanted something that "just works" without complex configuration. I'm not a tmux expert, but I value good developer experience (DevEx). If you find bugs or have ideas, contributions are welcome! We use conventional commits and encourage working with Claude Code via CLAUDE.md.
