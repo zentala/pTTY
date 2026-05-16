@@ -1,6 +1,6 @@
 # 🖥️ pTTY — Persistent terminals for AI coding
 
-> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. SSH back into the server and your tmux sessions are still running — same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`–`F12` jumps between 5 always-on consoles like browser tabs.
+> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. SSH back into the server and your tmux sessions are still running — same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`–`F10` jumps between 10 consoles like browser tabs (5 active, 5 on-demand); `Ctrl+F11` opens the manager menu, `Ctrl+F12` shows the keyboard cheatsheet.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Built on tmux](https://img.shields.io/badge/Built%20on-tmux-green.svg)](https://github.com/tmux/tmux)
@@ -77,7 +77,7 @@ Perfect companion for:
 **pTTY's unique combination:**
 
 1. **Zero configuration** — 5 always-on `console-1`…`console-5` sessions created by one install command
-2. **Ctrl+F1–F12 direct hotkeys** — no prefix-key gymnastics; once attached, switching between consoles feels like browser tabs
+2. **Direct F-key hotkeys** — `Ctrl+F1`–`F10` for the 10 consoles (no prefix-key gymnastics, works like browser tabs); `Ctrl+F11` for the manager menu; `Ctrl+F12` for the cheatsheet
 3. **Safe-exit protection** — typing `exit` in the wrong terminal prompts before destroying the session
 4. **AI-coding-first defaults** — opinionated tmux config tuned for long-running Claude Code / Codex / Aider sessions over flaky SSH
 
@@ -95,12 +95,12 @@ This creates 5 detached tmux sessions (`console-1`…`console-5`) and the `conne
 
 ### 2. Set up a short SSH alias (recommended — this is the real DevEx win)
 
-Edit `~/.ssh/config` on your **laptop** and add a dedicated alias that drops you straight into tmux. Pick any short hostname you like — for example `tmux.zentala.io`, `dev`, `ptty`:
+Edit `~/.ssh/config` on your **laptop** and add a dedicated alias that drops you straight into tmux. Pick any short hostname you like — for example `tmux.example.com`, `dev`, `ptty`:
 
 ```sshconfig
-Host tmux.zentala.io
-    HostName your-actual-server.example.com
-    User your-username
+Host tmux.example.com
+    HostName your-server.example.com
+    User you
     RequestTTY yes
     RemoteCommand tmux attach -t console-1 || tmux new -s console-1
     ServerAliveInterval 30
@@ -117,7 +117,7 @@ What each line does:
 Now from your laptop:
 
 ```bash
-ssh tmux.zentala.io
+ssh tmux.example.com
 ```
 
 …and you're in `console-1` on the server. WiFi dies? Run the same command again — same session, same AI conversation, same scrollback. Once attached, `Ctrl+F1`–`F12` jumps between the 5 consoles.
@@ -128,15 +128,15 @@ If you want SSH bookmarks for each console, duplicate the block and change the `
 
 ```sshconfig
 Host tmux1
-    HostName your-actual-server.example.com
-    User your-username
+    HostName your-server.example.com
+    User you
     RequestTTY yes
     RemoteCommand tmux attach -t console-1 || tmux new -s console-1
     ServerAliveInterval 30
 
 Host tmux2
-    HostName your-actual-server.example.com
-    User your-username
+    HostName your-server.example.com
+    User you
     RequestTTY yes
     RemoteCommand tmux attach -t console-2 || tmux new -s console-2
     ServerAliveInterval 30
@@ -148,9 +148,9 @@ Then `ssh tmux1`, `ssh tmux2`, etc.
 
 Once the SSH alias works, point your terminal profile's command at it:
 
-- **Windows Terminal:** `"commandline": "ssh tmux.zentala.io"`
-- **iTerm2:** New Profile → Command → `ssh tmux.zentala.io`
-- **Ghostty / WezTerm / Alacritty:** any "launch command" field accepts `ssh tmux.zentala.io`
+- **Windows Terminal:** `"commandline": "ssh tmux.example.com"`
+- **iTerm2:** New Profile → Command → `ssh tmux.example.com`
+- **Ghostty / WezTerm / Alacritty:** any "launch command" field accepts `ssh tmux.example.com`
 
 ### Alternative: skip the alias and type the long form
 
@@ -160,7 +160,7 @@ If you don't want to edit `~/.ssh/config`, the equivalent one-liner works too:
 ssh user@server -t "tmux attach -t console-1 || tmux new -s console-1"
 ```
 
-But seriously — set up the alias. It's the difference between `ssh tmux.zentala.io` and 60 characters of muscle memory.
+But seriously — set up the alias. It's the difference between `ssh tmux.example.com` and 60 characters of muscle memory.
 
 ## 🎯 Perfect For
 
@@ -229,17 +229,20 @@ But seriously — set up the alias. It's the difference between `ssh tmux.zental
 ## 🔧 Advanced Usage
 
 ### Remote SSH Access
+
+The clean DevEx is the `~/.ssh/config` alias documented in [Quick Start](#-quick-start) — `ssh tmux.example.com` and you're in. The long-form equivalents below are for users who haven't set up the alias yet:
+
 ```bash
-# Direct connection to specific console
-ssh user@server -t "tmux attach -t console-1"
+# Long-form: SSH with explicit RemoteCommand
+ssh you@your-server.example.com -t "tmux attach -t console-1 || tmux new -s console-1"
 
-# Interactive menu connection
-ssh user@server -t "/path/to/connect-console"
+# Interactive menu (lets you pick a console after connecting)
+ssh you@your-server.example.com -t "/path/to/connect-console"
 
-# Windows Terminal profile
+# Windows Terminal profile pointing at the SSH alias
 {
-  "name": "Server Console 1",
-  "commandline": "ssh user@server -t 'tmux attach -t console-1'",
+  "name": "pTTY",
+  "commandline": "ssh tmux.example.com",
   "icon": "📟"
 }
 ```
@@ -262,35 +265,37 @@ tmux new-session -d -s "project-work"
 ## 🤖 AI CLI Workflow Examples
 
 ### Claude Code Remote Development
-```bash
-# Console-1: Main Claude Code session
-ssh server -t "tmux attach -t console-1"
-# Run: claude-code
 
-# Console-2: File monitoring
-ssh server -t "tmux attach -t console-2"
-# Run: tail -f logs/app.log
+You SSH in **once** — `ssh tmux.example.com` — and then use `Ctrl+F1`–`F5` to flip between consoles inside that single tmux session. No second SSH, no second terminal window required.
 
-# Console-3: Git operations
-ssh server -t "tmux attach -t console-3"
-# Ready for git commands
+```text
+ssh tmux.example.com         # one connection — lands you in console-1
 
-# Switch instantly with Ctrl+F1, Ctrl+F2, Ctrl+F3
+# Inside tmux, set each console up once:
+#   Ctrl+F1 → console-1 → run: claude-code
+#   Ctrl+F2 → console-2 → run: tail -f logs/app.log
+#   Ctrl+F3 → console-3 → run: git status
+
+# Then just press Ctrl+F1 / F2 / F3 to switch between them instantly.
+# WiFi dies? Run `ssh tmux.example.com` again — everything is still there.
 ```
 
 ### GitHub Copilot CLI Workflow
-```bash
-# Console-1: Copilot chat sessions
-gh copilot explain "complex function"
 
-# Console-2: Testing and execution
-npm test
+Same pattern — one SSH connection, multiple consoles via F-keys:
 
-# Console-3: Git and deployment
-git status && git push
+```text
+ssh tmux.example.com
 
-# All sessions survive if SSH drops!
+# Ctrl+F1 → Copilot chat:  gh copilot explain "complex function"
+# Ctrl+F2 → Testing:       npm test --watch
+# Ctrl+F3 → Git/deploy:    git status && git push
+
+# All three consoles stay alive on the server. Disconnect any time;
+# reconnect with `ssh tmux.example.com` and pick up exactly where you left off.
 ```
+
+> 💡 **Why one SSH, not three?** tmux multiplexes inside the single SSH connection — one TCP socket carries all 10 consoles. Opening three SSH sessions just to switch between three consoles wastes connections and forces you to track three separate terminal windows. The whole point of pTTY is: *one connection, many consoles, F-keys to flip between them*.
 
 ## 📁 Project Structure
 
@@ -445,7 +450,7 @@ Created out of frustration with losing hours of work when SSH connections crashe
 
 ## 🧪 Testing Infrastructure
 
-Want to test tmux-persistent-console on a real server? We provide automated testing infrastructure using **Oracle Cloud Free Tier**!
+Want to test pTTY on a real server? We provide automated testing infrastructure using **Oracle Cloud Free Tier**!
 
 ### Quick Test Deployment
 ```bash
@@ -480,7 +485,7 @@ cd tests/scripts
 
 See [`tests/README.md`](tests/README.md) for detailed testing documentation.
 
-**🎉 Test your tmux-persistent-console setup risk-free on real cloud infrastructure!**
+**🎉 Test your pTTY setup risk-free on real cloud infrastructure!**
 
 ## 📐 Project Specification
 

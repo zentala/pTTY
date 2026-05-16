@@ -58,8 +58,16 @@ When generating any user-facing content for pTTY:
 4. **Never put vendor names in product name** — "Claude", "Codex", "Gemini" appear only in descriptions ("works with...")
 5. **Differentiate honestly** from tmuxinator (project setup), tmux-resurrect (recovery, loses AI context), zellij (alternative substrate)
 6. **Acknowledge the mechanism** when audience is technical: tmux server keeps process alive in memory; that's how the AI conversation context survives
-7. **Never conflate "reconnect" with "Ctrl+F1"** — reconnect means SSH back into the server (typically via a `~/.ssh/config` alias with `RemoteCommand tmux attach -t console-1`). `Ctrl+F1`–`F12` is the in-tmux switcher between virtual consoles, like browser tabs, used **after** you're already attached. Copy that mixes the two layers is wrong.
+7. **Never conflate "reconnect" with "Ctrl+F1"** — reconnect means SSH back into the server (typically via a `~/.ssh/config` alias with `RemoteCommand tmux attach -t console-1`). The F-keys are the in-tmux switcher used **after** you're already attached. Copy that mixes the two layers is wrong.
 8. **Do not claim systemd / boot persistence as a feature** — pTTY does not try to survive server reboot; that's intentional, out-of-scope, and a fundamentally different product class. The `src/tmux-console.service` file exists for users who want it, but it's not a marketing point.
+9. **F-key map is split, not uniform** — write it correctly every time:
+   - `Ctrl+F1`–`Ctrl+F5` → consoles 1–5 (active, created on startup)
+   - `Ctrl+F6`–`Ctrl+F10` → consoles 6–10 (on-demand / suspended, auto-created on first F-key press)
+   - `Ctrl+F11` → Manager Menu (interactive TUI)
+   - `Ctrl+F12` → Keyboard cheatsheet / Help Reference
+   Never write "Ctrl+F1–F12 switches between consoles" — that overstates the range by 2 keys and erases the manager + help affordances. The "like browser tabs" analogy only applies to `Ctrl+F1`–`F10`.
+10. **Use generic placeholder hostnames in user-facing examples** — `tmux.example.com` for the SSH alias, `your-server.example.com` for the actual HostName. Never use the maintainer's real domains (`zentala.io`, `zentala.eu`, etc.) in README or docs — readers shouldn't have to mentally substitute someone else's domain to understand the example.
+11. **One SSH connection multiplexes many consoles — don't show repeated `ssh server -t "tmux attach…"` invocations to access different consoles.** The correct pattern is: SSH once, switch with `Ctrl+F1`–`F10`. Multiple SSH commands belong only in advanced examples where the user genuinely wants parallel client windows (e.g., one terminal per monitor).
 
 Full rules, approved taglines, and validation checklist: **[01-vision/VALUE-PROPOSITION.md](01-vision/VALUE-PROPOSITION.md)**
 

@@ -65,7 +65,7 @@ This is **fundamentally different** from save/restore tools like tmux-resurrect.
 pTTY's unique combination:
 
 1. **Zero configuration** — 5 always-on `console-1`…`console-5` sessions created by one install command
-2. **Ctrl+F1–F12 direct hotkeys** — no prefix-key gymnastics; once attached, switching between consoles feels like browser tabs
+2. **Direct F-key hotkeys** — `Ctrl+F1`–`F10` for the 10 consoles (no prefix-key gymnastics, works like browser tabs); `Ctrl+F11` for the manager menu; `Ctrl+F12` for the keyboard cheatsheet
 3. **Safe-exit protection** — typing `exit` in the wrong terminal prompts before destroying the session
 4. **AI-coding-first defaults** — opinionated tmux config tuned for long-running Claude Code / Codex / Aider sessions over flaky SSH
 5. **Documented SSH-alias DevEx** — README ships the exact `~/.ssh/config` block to make `ssh tmux.your-server` drop you straight into a persistent console
@@ -130,7 +130,8 @@ The rule: **vendor names describe what pTTY works with, never what pTTY is**.
 - ✅ Vendor-neutral framing: "Works with Claude Code, Codex, Gemini CLI, Aider, and any AI CLI"
 - ✅ Mechanism-aware: "Keeps the process alive, not just the state"
 - ✅ Concrete actions: "SSH back in and tmux reattaches you to the same console" — and separately "Ctrl+F1–F12 switches between the 5 consoles once you're attached"
-- ⚠️ **Do not conflate the two mechanisms.** Reconnect = SSH (`ssh user@host -t "tmux attach -t console-1"`, or via a `~/.ssh/config` alias). Ctrl+F1–F12 = in-tmux switcher between virtual consoles, like browser tabs. They are different layers; copy that mixes them is wrong.
+- ⚠️ **Do not conflate the two mechanisms.** Reconnect = SSH (`ssh user@host -t "tmux attach -t console-1"`, or via a `~/.ssh/config` alias). `Ctrl+F1`–`F10` = in-tmux switcher between the 10 virtual consoles, like browser tabs. They are different layers; copy that mixes them is wrong.
+- ⚠️ **F-key map is split, not uniform.** `Ctrl+F1`–`F10` = consoles 1–10 (F1–F5 active, F6–F10 on-demand). `Ctrl+F11` = manager menu (interactive TUI). `Ctrl+F12` = keyboard cheatsheet. Never write "F1–F12 switches between consoles" — that's wrong.
 
 ## Approved Tagline Variants
 
@@ -138,7 +139,7 @@ The rule: **vendor names describe what pTTY works with, never what pTTY is**.
 
 > **Persistent terminals for AI coding.**
 >
-> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. SSH back into the server and your tmux sessions are still running — same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`–`F12` jumps between 5 always-on consoles like browser tabs.
+> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. SSH back into the server and your tmux sessions are still running — same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`–`F10` jumps between 10 consoles like browser tabs (5 active, 5 on-demand); `Ctrl+F11` opens the manager menu, `Ctrl+F12` shows the keyboard cheatsheet.
 
 ### GitHub repo description (~350 char limit)
 
