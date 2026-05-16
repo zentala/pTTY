@@ -23,6 +23,12 @@
 
 ---
 
+## 🆕 New v0.2 Tasks
+
+- **[018-on-demand-consoles.md](018-on-demand-consoles.md)** — Lazy-create consoles 6–10 on first `Ctrl+F<N>` press (today setup.sh eagerly creates 7; spec says 5 active + 5 on-demand). Status-bar must visually distinguish active / available / suspended slots. Closes a real spec ↔ implementation gap that prevents honest marketing of the "5 + 5" model. Medium priority, 2–4h.
+
+---
+
 ## 🚦 Quality Gate (Must Complete Before Implementation)
 
 ### ⚠️ Task 011: Pre-Implementation UX Review - **PAUSED**
