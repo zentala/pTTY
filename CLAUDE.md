@@ -33,6 +33,36 @@ This file provides guidance to Claude Code when working with this codebase.
 
 ---
 
+## 🎯 Value Proposition — READ FIRST For Any User-Facing Work
+
+**⚠️ CRITICAL: Before writing ANY user-facing content (README, social posts, taglines, marketing copy, GitHub description, blog posts), read [01-vision/VALUE-PROPOSITION.md](01-vision/VALUE-PROPOSITION.md) in full and validate against its checklist.**
+
+### What pTTY actually is (one sentence)
+
+pTTY is an opinionated tmux preset that keeps AI coding sessions alive across SSH drops, WiFi glitches, and laptop sleep — so Claude Code, Codex, Gemini CLI, and Aider context survives every disconnection **except a full server crash**.
+
+### What pTTY is NOT
+
+- NOT a tmux replacement (it's a preset on top of tmux)
+- NOT a session manager like tmuxinator (different use case)
+- NOT a recovery tool like tmux-resurrect (different mechanism, different guarantees)
+- NOT a Claude-only tool (vendor-neutral; works with any AI CLI)
+
+### Hard rules for AI agents
+
+When generating any user-facing content for pTTY:
+
+1. **Brand name is "pTTY"** — never "tmux-persistent-console" in marketing (repo URL only)
+2. **Never claim** "never lose your session", "indestructible", "survives anything" — all overpromises (server crashes still kill sessions)
+3. **Always specify scenarios** pTTY protects against: SSH drops, WiFi, laptop sleep, network change, accidental `exit`
+4. **Never put vendor names in product name** — "Claude", "Codex", "Gemini" appear only in descriptions ("works with...")
+5. **Differentiate honestly** from tmuxinator (project setup), tmux-resurrect (recovery, loses AI context), zellij (alternative substrate)
+6. **Acknowledge the mechanism** when audience is technical: tmux server keeps process alive in memory; that's how the AI conversation context survives
+
+Full rules, approved taglines, and validation checklist: **[01-vision/VALUE-PROPOSITION.md](01-vision/VALUE-PROPOSITION.md)**
+
+---
+
 ## 📐 Specification-Driven Development
 
 **⚠️ CRITICAL: Before making ANY changes, read [02-planning/SPEC.md](02-planning/SPEC.md) - the unified specification.**
@@ -93,7 +123,9 @@ All conflicts MUST be resolved by updating SPEC.md first.
 
 ## Project Overview
 
-**pTTY (PersistentTTY)** - Persistent tmux sessions with safe-exit protection and instant F-key switching for remote development.
+**pTTY (PersistentTTY)** — Persistent terminals for AI coding. An opinionated tmux preset that keeps Claude Code, Codex, Gemini CLI, and Aider sessions alive across SSH drops, WiFi glitches, and laptop sleep. Built on tmux for reliability; differentiated by Ctrl+F1–F12 direct hotkeys, AI-CLI-aware defaults, and safe-exit protection.
+
+**See [01-vision/VALUE-PROPOSITION.md](01-vision/VALUE-PROPOSITION.md) before writing any user-facing content.**
 
 ### Project Identity
 - **Display name:** pTTY
