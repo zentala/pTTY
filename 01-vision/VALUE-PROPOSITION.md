@@ -62,13 +62,15 @@ This is **fundamentally different** from save/restore tools like tmux-resurrect.
 | **zellij** | Modern tmux alternative in Rust | Substrate not preset; session persistence historically weaker than tmux; no AI CLI focus |
 | **mosh** | SSH replacement with roaming | Helps with the connection layer but doesn't multiplex sessions or label them for AI workflows; complementary, not competitive |
 
-pTTY's unique combination — none of the above have all five:
+pTTY's unique combination:
 
-1. **Zero configuration** — 5 sessions ready after one install command
-2. **Ctrl+F1–F12 direct hotkeys** — no prefix-key gymnastics, works like browser tabs
-3. **AI CLI workflow defaults** — sessions pre-labeled for AI use cases
-4. **Safe-exit protection** — prevents accidental session destruction via `exit`
-5. **Systemd auto-start** — sessions reappear after reboot (empty, but ready)
+1. **Zero configuration** — 5 always-on `console-1`…`console-5` sessions created by one install command
+2. **Ctrl+F1–F12 direct hotkeys** — no prefix-key gymnastics; once attached, switching between consoles feels like browser tabs
+3. **Safe-exit protection** — typing `exit` in the wrong terminal prompts before destroying the session
+4. **AI-coding-first defaults** — opinionated tmux config tuned for long-running Claude Code / Codex / Aider sessions over flaky SSH
+5. **Documented SSH-alias DevEx** — README ships the exact `~/.ssh/config` block to make `ssh tmux.your-server` drop you straight into a persistent console
+
+Out-of-scope on purpose: **surviving server reboot**. That's a fundamentally different product class (state replication + cloud sync) and pTTY does not attempt it. Marketing must respect this — see "Marketing Copy Rules" below.
 
 ## Target Audience (Priority Order)
 
@@ -127,7 +129,8 @@ The rule: **vendor names describe what pTTY works with, never what pTTY is**.
 - ✅ Honest scope: "Your session stays alive on the server while you reconnect"
 - ✅ Vendor-neutral framing: "Works with Claude Code, Codex, Gemini CLI, Aider, and any AI CLI"
 - ✅ Mechanism-aware: "Keeps the process alive, not just the state"
-- ✅ Concrete actions: "Reconnect with `Ctrl+F1`"
+- ✅ Concrete actions: "SSH back in and tmux reattaches you to the same console" — and separately "Ctrl+F1–F12 switches between the 5 consoles once you're attached"
+- ⚠️ **Do not conflate the two mechanisms.** Reconnect = SSH (`ssh user@host -t "tmux attach -t console-1"`, or via a `~/.ssh/config` alias). Ctrl+F1–F12 = in-tmux switcher between virtual consoles, like browser tabs. They are different layers; copy that mixes them is wrong.
 
 ## Approved Tagline Variants
 
@@ -135,7 +138,7 @@ The rule: **vendor names describe what pTTY works with, never what pTTY is**.
 
 > **Persistent terminals for AI coding.**
 >
-> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. Reconnect with `Ctrl+F1` and pick up exactly where you left off — same conversation context, same scrollback, same running processes.
+> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. SSH back into the server and your tmux sessions are still running — same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`–`F12` jumps between 5 always-on consoles like browser tabs.
 
 ### GitHub repo description (~350 char limit)
 
@@ -143,7 +146,7 @@ The rule: **vendor names describe what pTTY works with, never what pTTY is**.
 
 ### Social one-liner
 
-> pTTY: 5 persistent terminals for your AI CLI work. SSH drops? Reconnect with Ctrl+F1 — your session is still running on the server.
+> pTTY: 5 persistent terminals for your AI CLI work. SSH drops? `ssh` back in — your tmux session is still running on the server, AI conversation intact.
 
 ### Hacker News / Reddit / developer audience
 

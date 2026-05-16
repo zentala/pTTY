@@ -58,6 +58,8 @@ When generating any user-facing content for pTTY:
 4. **Never put vendor names in product name** — "Claude", "Codex", "Gemini" appear only in descriptions ("works with...")
 5. **Differentiate honestly** from tmuxinator (project setup), tmux-resurrect (recovery, loses AI context), zellij (alternative substrate)
 6. **Acknowledge the mechanism** when audience is technical: tmux server keeps process alive in memory; that's how the AI conversation context survives
+7. **Never conflate "reconnect" with "Ctrl+F1"** — reconnect means SSH back into the server (typically via a `~/.ssh/config` alias with `RemoteCommand tmux attach -t console-1`). `Ctrl+F1`–`F12` is the in-tmux switcher between virtual consoles, like browser tabs, used **after** you're already attached. Copy that mixes the two layers is wrong.
+8. **Do not claim systemd / boot persistence as a feature** — pTTY does not try to survive server reboot; that's intentional, out-of-scope, and a fundamentally different product class. The `src/tmux-console.service` file exists for users who want it, but it's not a marketing point.
 
 Full rules, approved taglines, and validation checklist: **[01-vision/VALUE-PROPOSITION.md](01-vision/VALUE-PROPOSITION.md)**
 

@@ -1,6 +1,6 @@
 # 🖥️ pTTY — Persistent terminals for AI coding
 
-> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. Reconnect with `Ctrl+F1` and pick up exactly where you left off — same conversation context, same scrollback, same running processes.
+> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. SSH back into the server and your tmux sessions are still running — same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`–`F12` jumps between 5 always-on consoles like browser tabs.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Built on tmux](https://img.shields.io/badge/Built%20on-tmux-green.svg)](https://github.com/tmux/tmux)
@@ -20,7 +20,7 @@ This is the daily reality of remote AI-assisted development:
 
 ## The Solution
 
-pTTY keeps the **process alive on the server** while you reconnect. tmux runs as a server process; your AI CLI runs as its child; both keep going even when SSH dies. Reconnect, hit `Ctrl+F1`, and you're back exactly where you were — same conversation, same scrollback, same running processes.
+pTTY keeps the **process alive on the server** while you reconnect. tmux runs as a server process; your AI CLI runs as its child; both keep going even when SSH dies. SSH back into the server (`ssh user@host -t "tmux attach -t console-1"`, or via the `connect-console` menu, or a pre-configured Windows Terminal / iTerm profile) and you land exactly where you were — same conversation, same scrollback, same running processes. From there, `Ctrl+F1`–`F12` switches between 5 always-on consoles inside tmux, each holding its own session.
 
 ### What pTTY protects you from
 
@@ -74,32 +74,93 @@ Perfect companion for:
 | **zellij** | Modern tmux alternative in Rust | When you want a different multiplexer and don't need AI-CLI-optimized defaults |
 | **mosh** | SSH replacement with roaming | Complementary — solves the connection layer; pTTY solves the session layer. Use both. |
 
-**pTTY's unique combination** (no other tool has all five):
+**pTTY's unique combination:**
 
-1. **Zero configuration** — 5 sessions ready after one install command
-2. **Ctrl+F1–F12 direct hotkeys** — no prefix-key gymnastics; works like browser tabs
-3. **AI CLI workflow defaults** — sessions pre-labeled for AI development
-4. **Safe-exit protection** — prevents accidental session destruction
-5. **Systemd auto-start** — sessions reappear after reboot (empty, ready to use)
+1. **Zero configuration** — 5 always-on `console-1`…`console-5` sessions created by one install command
+2. **Ctrl+F1–F12 direct hotkeys** — no prefix-key gymnastics; once attached, switching between consoles feels like browser tabs
+3. **Safe-exit protection** — typing `exit` in the wrong terminal prompts before destroying the session
+4. **AI-coding-first defaults** — opinionated tmux config tuned for long-running Claude Code / Codex / Aider sessions over flaky SSH
+
+pTTY explicitly does **not** try to survive server reboot — that's a fundamentally different product (state replication, cloud sync). pTTY's contract is "survives SSH disconnect, not server restart."
 
 ## 🚀 Quick Start
 
-### One-Line Installation
+### 1. Install on the server (one line)
+
 ```bash
 curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash
 ```
 
-### Instant Usage
-```bash
-# Connect interactively
-connect-console
+This creates 5 detached tmux sessions (`console-1`…`console-5`) and the `connect-console` helper. Run it on whichever box you SSH into for AI coding (your VPS, dev server, home server).
 
-# Or directly to specific console
-tmux attach -t console-1
+### 2. Set up a short SSH alias (recommended — this is the real DevEx win)
 
-# From remote (SSH)
-ssh user@server -t "tmux attach -t console-1"
+Edit `~/.ssh/config` on your **laptop** and add a dedicated alias that drops you straight into tmux. Pick any short hostname you like — for example `tmux.zentala.io`, `dev`, `ptty`:
+
+```sshconfig
+Host tmux.zentala.io
+    HostName your-actual-server.example.com
+    User your-username
+    RequestTTY yes
+    RemoteCommand tmux attach -t console-1 || tmux new -s console-1
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
 ```
+
+What each line does:
+
+- `HostName` / `User` — the actual server you're SSH'ing to
+- `RequestTTY yes` + `RemoteCommand` — bypass the login shell and attach directly to tmux
+- `tmux attach -t console-1 || tmux new -s console-1` — attach if it exists, otherwise create it (idempotent; safe to run after a fresh reboot)
+- `ServerAliveInterval 30` / `ServerAliveCountMax 3` — keep the TCP connection healthy on flaky WiFi; SSH will give up cleanly after ~90s of true silence
+
+Now from your laptop:
+
+```bash
+ssh tmux.zentala.io
+```
+
+…and you're in `console-1` on the server. WiFi dies? Run the same command again — same session, same AI conversation, same scrollback. Once attached, `Ctrl+F1`–`F12` jumps between the 5 consoles.
+
+### 3. (Optional) Per-console aliases for jumping straight into a specific tab
+
+If you want SSH bookmarks for each console, duplicate the block and change the `RemoteCommand` target:
+
+```sshconfig
+Host tmux1
+    HostName your-actual-server.example.com
+    User your-username
+    RequestTTY yes
+    RemoteCommand tmux attach -t console-1 || tmux new -s console-1
+    ServerAliveInterval 30
+
+Host tmux2
+    HostName your-actual-server.example.com
+    User your-username
+    RequestTTY yes
+    RemoteCommand tmux attach -t console-2 || tmux new -s console-2
+    ServerAliveInterval 30
+```
+
+Then `ssh tmux1`, `ssh tmux2`, etc.
+
+### 4. Bookmark in Windows Terminal / iTerm / Ghostty (optional)
+
+Once the SSH alias works, point your terminal profile's command at it:
+
+- **Windows Terminal:** `"commandline": "ssh tmux.zentala.io"`
+- **iTerm2:** New Profile → Command → `ssh tmux.zentala.io`
+- **Ghostty / WezTerm / Alacritty:** any "launch command" field accepts `ssh tmux.zentala.io`
+
+### Alternative: skip the alias and type the long form
+
+If you don't want to edit `~/.ssh/config`, the equivalent one-liner works too:
+
+```bash
+ssh user@server -t "tmux attach -t console-1 || tmux new -s console-1"
+```
+
+But seriously — set up the alias. It's the difference between `ssh tmux.zentala.io` and 60 characters of muscle memory.
 
 ## 🎯 Perfect For
 
@@ -237,7 +298,7 @@ git status && git push
 tmux-persistent-console/
 ├── install.sh              # One-liner installer
 ├── src/
-│   ├── setup.sh            # Creates 7 persistent sessions
+│   ├── setup.sh            # Creates 5 persistent sessions
 │   ├── connect.sh          # Interactive connection menu
 │   ├── tmux.conf           # Optimized tmux configuration
 │   └── uninstall.sh        # Clean removal script
@@ -253,7 +314,7 @@ tmux-persistent-console/
 
 ### What It Does
 1. Installs tmux configuration with function key bindings
-2. Creates 7 persistent sessions (console-1 to console-7)
+2. Creates 5 persistent sessions (console-1 to console-5)
 3. Sets up `connect-console` command alias
 4. Configures optimal tmux settings for remote work
 
@@ -278,23 +339,9 @@ chmod +x ~/.vps/sessions/*.sh
 ln -s ~/.vps/sessions/connect.sh /usr/local/bin/connect-console
 ```
 
-### Auto-Start on System Boot (Systemd)
-```bash
-# Copy systemd service file
-mkdir -p ~/.config/systemd/user
-cp src/tmux-console.service ~/.config/systemd/user/
+### A note on server reboots
 
-# Enable and start service
-systemctl --user daemon-reload
-systemctl --user enable tmux-console.service
-systemctl --user start tmux-console.service
-
-# Enable user lingering (sessions persist after logout)
-sudo loginctl enable-linger $USER
-
-# Check status
-systemctl --user status tmux-console.service
-```
+pTTY does **not** try to survive a server reboot. When the host restarts, the tmux server dies and every session — along with the AI conversation context in process memory — is gone. There is a `src/tmux-console.service` file in this repo for users who want to auto-recreate **empty** sessions on boot, but that is recreation, not persistence, and we don't promote it as a feature. If you need crash-survivable AI sessions, that's a different product class (state replication + cloud sync); pTTY is laser-focused on surviving SSH disconnects, not server restarts.
 
 ## 🛡️ Safe Exit Protection
 
@@ -335,8 +382,8 @@ setup-console-sessions
 # or
 ~/.vps/sessions/src/setup.sh
 
-# Option 2: Setup auto-start with systemd (recommended)
-# See "Auto-Start on System Boot" section above
+# Note: pTTY does not try to persist sessions across server reboots.
+# After a reboot, run setup-console-sessions again. See "A note on server reboots" above.
 ```
 
 ### Function Keys Don't Work
