@@ -23,9 +23,15 @@
 
 ---
 
-## 🆕 New v0.2 Tasks
+## 🆕 New v0.2 Tasks (from 2026-05-16 positioning review)
 
-- **[018-on-demand-consoles.md](018-on-demand-consoles.md)** — Lazy-create consoles 6–10 on first `Ctrl+F<N>` press (today setup.sh eagerly creates 7; spec says 5 active + 5 on-demand). Status-bar must visually distinguish active / available / suspended slots. Closes a real spec ↔ implementation gap that prevents honest marketing of the "5 + 5" model. Medium priority, 2–4h.
+**Recommended sequence: 019 → 020 → 021 → 022.** Each depends on the previous; running in parallel = merge hell.
+
+- **[019-always-10-consoles.md](019-always-10-consoles.md)** ⭐ — Drop the "5 active + 5 on-demand" model. Make pTTY always create 10 consoles on startup. Simpler setup, simpler tmux.conf, simpler status bar (2 visual states instead of 3), simpler README. Cost: ~30–50 MB idle bash RSS on server (noise on any modern VPS). Supersedes task 018. High priority, 1–2h.
+- **[020-readme-devex-pass.md](020-readme-devex-pass.md)** — Apply the 15 DevEx fixes from the README review: asciinema GIF in hero, "Try locally in 30s" Docker path, trim Quick Start, TOC, Uninstall section, fix mental-model whiplash, dedupe "Why This Exists" vs "The Problem", move Oracle Cloud Terraform out of README. High priority, 2–3h. Depends on 019.
+- **[021-readme-tech-correctness.md](021-readme-tech-correctness.md)** — Apply the 20 technical correctness fixes: `curl|bash` safety story, real tmux minimum version (verify against features used; "2.0+" is wrong), `Ctrl+H`/`Ctrl+Alt+R` collision warnings, scoped session reset (no more `tmux kill-server` nuking unrelated sessions), `sudo` clarity in manual install, function-keys troubleshooting depth. High priority, 2–3h. Depends on 020.
+- **[022-ssh-agent-and-secrets.md](022-ssh-agent-and-secrets.md)** — Net-new README section: SSH agent forwarding for `gh` / `git push` / cloud CLIs in long AI sessions, plus the stale-socket fix for detach/reattach. Common pain point, currently undocumented. Medium priority, 1–2h. Depends on 021.
+- **[018-on-demand-consoles.md](018-on-demand-consoles.md)** — ⚠️ Superseded by task 019. Body kept for history; do not implement.
 
 ---
 

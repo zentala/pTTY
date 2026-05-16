@@ -4,7 +4,7 @@
 
 # Task 018: On-demand consoles for F6–F10
 
-**Status:** Pending
+**Status:** ⚠️ Superseded by [019-always-10-consoles.md](019-always-10-consoles.md) (2026-05-16). Body kept for history; do not implement. Rationale: decided that "5 active + 5 on-demand" is a complexity tax (3 status-bar states, lazy `if-shell` binds, hedged README copy) for a benefit (~30–50 MB RAM) that doesn't matter on any modern VPS. Going with always-10 instead.
 **Priority:** Medium (spec/implementation gap; doesn't block v0.2 release but blocks honest marketing of the 5-active+5-suspended model)
 **Type:** Feature / Bugfix
 **Estimated effort:** 2–4 hours
