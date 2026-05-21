@@ -85,13 +85,46 @@ pTTY explicitly does **not** try to survive server reboot — that's a fundament
 
 ## 🚀 Quick Start
 
-### 1. Install on the server (one line)
+> ⚠️ **v0.1 install is broken — use the manual path below.** The one-line `install.sh` ships with two known bugs that silently produce a half-working install (no bottom status bar, F11/F12/Ctrl+H/Ctrl+R do nothing). Both are tracked for v0.2 in [`.plan/epic-v0.2-ptty/wave-1-paths.md`](.plan/epic-v0.2-ptty/wave-1-paths.md). Until v0.2 ships, install via git clone (Option B). If you must use `install.sh`, apply the post-install patch (Option A footnote).
+
+### 1. Install on the server
+
+**Option A — one-liner (broken in v0.1, don't use yet):**
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash
 ```
 
-This creates 5 detached tmux sessions (`console-1`…`console-5`) and the `connect-console` helper. Run it on whichever box you SSH into for AI coding (your VPS, dev server, home server).
+Known failures in current `install.sh`:
+- Hardcoded `YOUR_USERNAME` placeholder in remote-download URLs → every downloaded file contains the literal string `404: Not Found` instead of code. (`install.sh:131-145`)
+- Installed `tmux.conf` `source-file`s `~/.vps/sessions/src/status-format-v4.tmux` and other `~/.vps/sessions/src/*.sh` paths that the installer never creates. `tmux` silently ignores missing `source-file` targets → no bottom status bar, no F11/F12/Ctrl+H/Ctrl+R bindings. (`src/tmux.conf:25,51,54,61,64`)
+
+**Option B — git clone (works today):**
+
+```bash
+# On the server you SSH into:
+git clone --depth 1 https://github.com/zentala/tmux-persistent-console.git /tmp/ptty
+mkdir -p ~/.tmux-persistent-console/tui ~/bin
+cp -r /tmp/ptty/src/. ~/.tmux-persistent-console/
+chmod +x ~/.tmux-persistent-console/*.sh ~/.tmux-persistent-console/tui/*.sh
+ln -sf ~/.tmux-persistent-console/connect.sh ~/bin/tpcon
+
+# Install tmux.conf:
+cp ~/.tmux-persistent-console/tmux.conf ~/.tmux.conf
+
+# Required shim — until v0.2 lands, tmux.conf still references the legacy
+# ~/.vps/sessions/src/ path. Symlink it to the real install dir:
+mkdir -p ~/.vps/sessions
+ln -sfn ~/.tmux-persistent-console ~/.vps/sessions/src
+
+# Create the 7 console sessions:
+tmux kill-server 2>/dev/null
+bash ~/.tmux-persistent-console/setup.sh
+```
+
+Verify: `ssh user@server -t "tmux attach -t console-1"` should show a bottom status bar with `F1 F2 F3 …` tabs and the active console highlighted. If the bar is missing, the legacy-path symlink above is missing or wrong.
+
+This creates 7 detached tmux sessions (`console-1`…`console-7`) and the `tpcon` helper. Run it on whichever box you SSH into for AI coding (your VPS, dev server, home server).
 
 ### 2. Set up a short SSH alias (recommended — this is the real DevEx win)
 
