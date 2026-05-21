@@ -66,17 +66,19 @@ Perfect companion for:
 
 ## How pTTY Compares to Adjacent Tools
 
-| Tool | What it does | When to use it instead of pTTY |
-|------|--------------|--------------------------------|
-| **Raw tmux** | Terminal multiplexer | When you want full control and don't mind configuring everything yourself |
-| **tmuxinator** | Project setup via YAML | When you need different layouts per project (complementary to pTTY, not competitive) |
-| **tmux-resurrect** | Save/restore tmux state after server death | When server reboots are your main concern and you can tolerate losing AI conversation context (resurrect restarts processes from scratch) |
-| **zellij** | Modern tmux alternative in Rust | When you want a different multiplexer and don't need AI-CLI-optimized defaults |
-| **mosh** | SSH replacement with roaming | Complementary — solves the connection layer; pTTY solves the session layer. Use both. |
+Each entry: one sentence on what the tool is, one sentence on how pTTY differs.
+
+- **Raw tmux** — The underlying terminal multiplexer pTTY is built on. pTTY is a zero-config preset on top: 10 always-on consoles, F-key direct hotkeys, safe-exit, AI-CLI-tuned defaults — no `.tmux.conf` archaeology required.
+- **[tmuxinator](https://github.com/tmuxinator/tmuxinator)** — YAML-driven per-project layouts (panes, windows, working dirs). Complementary, not competitive: tmuxinator defines *what each project looks like*, pTTY keeps your AI session alive across SSH drops — use both.
+- **[tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect)** — Snapshots tmux layout to disk so you can restore after server reboot. Different guarantee: resurrect *restarts* processes from scratch (AI conversation context is gone); pTTY keeps the actual process running, so Claude/Codex/Aider state survives.
+- **[zellij](https://zellij.dev)** — Modern Rust-based multiplexer alternative to tmux with a nicer default UX. pTTY sticks with tmux because the AI-CLI ecosystem (Claude Code, asciinema recipes, SSH dotfiles) is tmux-shaped; if you want zellij as your substrate, pTTY isn't for you.
+- **[mosh](https://mosh.org)** — Replaces SSH with a roaming-friendly UDP protocol that survives IP changes. Complementary: mosh fixes the *connection layer*, pTTY fixes the *session layer* — combine them for the best long-running-agent setup.
+- **[standardagents/dmux](https://github.com/standardagents/dmux)** — Spawns and orchestrates multiple AI agents in parallel tmux panes (one agent per pane, coordinated from a controller). Different problem: dmux is a *multi-agent fan-out* tool; pTTY is *single-session persistence* — you can run dmux inside a pTTY console.
+- **[Wetty](https://github.com/butlerx/wetty) / [ttyd](https://github.com/tsl0922/ttyd)** — Expose a terminal in the browser over HTTP. pTTY is server-side only and uses your real terminal emulator over SSH — no browser tab, no extra port, no auth layer to lock down.
 
 **pTTY's unique combination:**
 
-1. **Zero configuration** — 5 always-on `console-1`…`console-5` sessions created by one install command
+1. **Zero configuration** — 10 always-on `console-1`…`console-10` sessions created by one install command
 2. **Direct F-key hotkeys** — `Ctrl+F1`–`F10` for the 10 consoles (no prefix-key gymnastics, works like browser tabs); `Ctrl+F11` for the manager menu; `Ctrl+F12` for the cheatsheet
 3. **Safe-exit protection** — typing `exit` in the wrong terminal prompts before destroying the session
 4. **AI-coding-first defaults** — opinionated tmux config tuned for long-running Claude Code / Codex / Aider sessions over flaky SSH
