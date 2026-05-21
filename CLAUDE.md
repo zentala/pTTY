@@ -73,6 +73,63 @@ Full rules, approved taglines, and validation checklist: **[01-vision/VALUE-PROP
 
 ---
 
+## 🛠 Installing pTTY on a server (current v0.1 state — READ BEFORE INSTALLING)
+
+**If a user asks you to install pTTY on their server, do NOT use `install.sh`.** It is broken in two specific ways and produces a half-working install that LOOKS successful (the script exits with `✅ Installation complete!`) but silently leaves the user with no status bar and no F11/F12/Ctrl+H/Ctrl+R bindings. Both bugs are tracked for v0.2 in [.plan/epic-v0.2-ptty/wave-1-paths.md](.plan/epic-v0.2-ptty/wave-1-paths.md). Until that epic ships, follow the procedure below.
+
+### The two bugs (so you can recognize the failure mode)
+
+1. **`install.sh:131-145`** — uses literal `YOUR_USERNAME` placeholder in `curl` URLs (e.g. `https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/setup.sh`). Every remote file download returns HTTP 404 and writes the string `404: Not Found` into the destination file. The script does not check `curl` exit codes, so installation continues. When `setup.sh` then runs, it fails with `404:: command not found` and no sessions are created — OR worse, a previous run already created the sessions, and the broken `setup.sh` looks like it succeeded.
+2. **`src/tmux.conf` lines 25, 51, 54, 61, 64** — `source-file ~/.vps/sessions/src/status-format-v4.tmux` and four `run-shell` bindings reference `~/.vps/sessions/src/*.sh`. `INSTALL_DIR` in `install.sh` is `~/.tmux-persistent-console/`, not `~/.vps/sessions/src/`. `tmux` silently skips missing `source-file` targets — no error, no warning, just no status bar and dead F-keys.
+
+### Working install procedure (use this verbatim)
+
+```bash
+# Pre-clean (in case a previous broken install left junk):
+tmux kill-server 2>/dev/null
+rm -rf ~/.tmux-persistent-console
+rm -f ~/.tmux.conf  # back it up first if the user has a custom one
+
+# Install from git (bypass install.sh entirely):
+git clone --depth 1 https://github.com/zentala/tmux-persistent-console.git /tmp/ptty
+mkdir -p ~/.tmux-persistent-console/tui ~/bin
+cp -r /tmp/ptty/src/. ~/.tmux-persistent-console/
+chmod +x ~/.tmux-persistent-console/*.sh ~/.tmux-persistent-console/tui/*.sh
+ln -sf ~/.tmux-persistent-console/connect.sh ~/bin/tpcon
+cp ~/.tmux-persistent-console/tmux.conf ~/.tmux.conf
+
+# REQUIRED: shim the legacy path that tmux.conf still references.
+# Skip this and the user gets no status bar.
+mkdir -p ~/.vps/sessions
+ln -sfn ~/.tmux-persistent-console ~/.vps/sessions/src
+
+# Create the 7 console sessions:
+bash ~/.tmux-persistent-console/setup.sh
+```
+
+### Verification (do not skip — the failure mode is silent)
+
+After install, SSH in and attach:
+
+```bash
+ssh user@server -t "tmux attach -t console-1"
+```
+
+You MUST see:
+- A bottom status bar with `F1 F2 F3 F4 F5 F6 F7` console tabs, active console highlighted.
+- `Ctrl+F2` through `Ctrl+F7` should switch sessions instantly.
+- `Ctrl+F11` should open the manager menu (TUI).
+- `Ctrl+F12` should show the keyboard cheatsheet.
+
+If the status bar is missing → the `~/.vps/sessions/src` symlink is wrong or missing. Re-run the `ln -sfn` step.
+If F-keys do nothing → `~/.tmux.conf` was not loaded; check `tmux source-file ~/.tmux.conf` output.
+
+### Why not just fix install.sh?
+
+That fix is part of v0.2 (wave-1: `PTTY_DIR` env-var, sed-template in install.sh, eliminate `~/.vps/sessions/` references, CI guard). Touching install.sh as a one-off patch would conflict with the planned `PTTY_DIR` refactor. The user-facing docs above are the bridge until v0.2 lands.
+
+---
+
 ## 📐 Specification-Driven Development
 
 **⚠️ CRITICAL: Before making ANY changes, read [02-planning/SPEC.md](02-planning/SPEC.md) - the unified specification.**
