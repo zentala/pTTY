@@ -48,6 +48,7 @@ If you need crash-survivable AI sessions, that's a different product (state repl
 ### 🛡️ Disconnection-Resistant Design
 - Sessions persist across SSH disconnects, WiFi changes, and laptop sleep
 - Reconnect over any new network and pick up where you left off
+- Survives server reboots automatically (systemd user service installed by `install.sh`)
 - AI conversation context stays in memory on the server — not just metadata
 - **Safe-exit protection** — prevents accidental session termination via `exit`
 
@@ -354,9 +355,10 @@ tmux-persistent-console/
 
 ### What It Does
 1. Installs tmux configuration with function key bindings
-2. Creates 5 persistent sessions (console-1 to console-5)
-3. Sets up `connect-console` command alias
-4. Configures optimal tmux settings for remote work
+2. Installs `tmux-console.service` (systemd user unit) and enables it via `loginctl enable-linger` so empty sessions auto-recreate on boot
+3. Creates 5 persistent sessions (console-1 to console-5)
+4. Sets up `connect-console` command alias
+5. Configures optimal tmux settings for remote work
 
 ### System Requirements
 - Linux/macOS with bash
@@ -381,7 +383,21 @@ ln -s ~/.vps/sessions/connect.sh /usr/local/bin/connect-console
 
 ### A note on server reboots
 
-pTTY does **not** try to survive a server reboot. When the host restarts, the tmux server dies and every session — along with the AI conversation context in process memory — is gone. There is a `src/tmux-console.service` file in this repo for users who want to auto-recreate **empty** sessions on boot, but that is recreation, not persistence, and we don't promote it as a feature. If you need crash-survivable AI sessions, that's a different product class (state replication + cloud sync); pTTY is laser-focused on surviving SSH disconnects, not server restarts.
+pTTY does **not** try to survive a server reboot in the sense of preserving session state. When the host restarts, the tmux server dies and every session — along with the AI conversation context in process memory — is gone. If you need crash-survivable AI sessions, that's a different product class (state replication + cloud sync); pTTY is laser-focused on surviving SSH disconnects.
+
+What pTTY *does* do on boot is **auto-recreate empty sessions** so `tmux attach -t console-1` keeps working after a restart instead of failing with `no sessions`. `install.sh` wires this up via `tmux-console.service` + `loginctl enable-linger`. Manual equivalent:
+
+```bash
+mkdir -p ~/.config/systemd/user
+cp tmux-console.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now tmux-console.service
+sudo loginctl enable-linger $USER   # required — without this, the service won't start on boot
+
+# Verify
+systemctl --user status tmux-console.service
+tmux ls   # console-1 .. console-5 (empty, freshly created)
+```
 
 ## 🛡️ Safe Exit Protection
 

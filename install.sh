@@ -216,9 +216,34 @@ if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
     export PATH="$BIN_DIR:$PATH"
 fi
 
-# Create initial sessions
-echo -e "${YELLOW}🚀 Creating console sessions...${NC}"
-"$INSTALL_DIR/setup.sh"
+# Install systemd user service so sessions survive reboot
+echo -e "${YELLOW}🔧 Installing systemd autostart service...${NC}"
+
+if [ ! -f "$INSTALL_DIR/tmux-console.service" ]; then
+    echo -e "${RED}❌ Missing $INSTALL_DIR/tmux-console.service — cannot install autostart${NC}"
+    exit 1
+fi
+
+mkdir -p "$HOME/.config/systemd/user"
+cp "$INSTALL_DIR/tmux-console.service" "$HOME/.config/systemd/user/tmux-console.service"
+systemctl --user daemon-reload
+
+# Enable lingering so user services run without an active login (survives reboot)
+if ! loginctl show-user "$USER" 2>/dev/null | grep -q "Linger=yes"; then
+    echo -e "${YELLOW}   Enabling user lingering (needs sudo)...${NC}"
+    if loginctl enable-linger "$USER" 2>/dev/null; then
+        echo -e "${GREEN}   ✓ Lingering enabled${NC}"
+    elif sudo loginctl enable-linger "$USER" 2>/dev/null; then
+        echo -e "${GREEN}   ✓ Lingering enabled (via sudo)${NC}"
+    else
+        echo -e "${YELLOW}   ⚠ Could not enable lingering — sessions will NOT survive reboot until you run:${NC}"
+        echo -e "${YELLOW}     sudo loginctl enable-linger $USER${NC}"
+    fi
+fi
+
+# Enable + start the service (creates console-1..7 immediately)
+systemctl --user enable --now tmux-console.service
+echo -e "${GREEN}✅ Service enabled — sessions will auto-start on boot${NC}"
 
 echo ""
 echo -e "${GREEN}✅ Installation complete!${NC}"
