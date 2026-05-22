@@ -100,7 +100,7 @@ curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main
 
 Known failures in current `install.sh`:
 - Hardcoded `YOUR_USERNAME` placeholder in remote-download URLs → every downloaded file contains the literal string `404: Not Found` instead of code. (`install.sh:131-145`)
-- Installed `tmux.conf` `source-file`s `~/.vps/sessions/src/status-format-v4.tmux` and other `~/.vps/sessions/src/*.sh` paths that the installer never creates. `tmux` silently ignores missing `source-file` targets → no bottom status bar, no F11/F12/Ctrl+H/Ctrl+R bindings. (`src/tmux.conf:25,51,54,61,64`)
+- Installed `tmux.conf` `source-file`s `~/.tmux-persistent-console/status-format-v4.tmux` and other `~/.tmux-persistent-console/*.sh` paths that the installer never creates. `tmux` silently ignores missing `source-file` targets → no bottom status bar, no F11/F12/Ctrl+H/Ctrl+R bindings. (`src/tmux.conf:25,51,54,61,64`)
 
 **Option B — git clone (works today):**
 
@@ -116,9 +116,9 @@ ln -sf ~/.tmux-persistent-console/connect.sh ~/bin/tpcon
 cp ~/.tmux-persistent-console/tmux.conf ~/.tmux.conf
 
 # Required shim — until v0.2 lands, tmux.conf still references the legacy
-# ~/.vps/sessions/src/ path. Symlink it to the real install dir:
-mkdir -p ~/.vps/sessions
-ln -sfn ~/.tmux-persistent-console ~/.vps/sessions/src
+# ~/.tmux-persistent-console/ path. Symlink it to the real install dir:
+mkdir -p ~/.tmux-persistent-console
+ln -sfn ~/.tmux-persistent-console ~/.tmux-persistent-console/src
 
 # Create the 7 console sessions:
 tmux kill-server 2>/dev/null
@@ -374,11 +374,11 @@ cd tmux-persistent-console
 # Install
 ./install.sh
 
-# Or copy files manually to ~/.vps/sessions/
-mkdir -p ~/.vps/sessions
-cp -r src/* ~/.vps/sessions/
-chmod +x ~/.vps/sessions/*.sh
-ln -s ~/.vps/sessions/connect.sh /usr/local/bin/connect-console
+# Or copy files manually to ~/.tmux-persistent-console/
+mkdir -p ~/.tmux-persistent-console
+cp -r src/* ~/.tmux-persistent-console/
+chmod +x ~/.tmux-persistent-console/*.sh
+ln -s ~/.tmux-persistent-console/connect.sh /usr/local/bin/connect-console
 ```
 
 ### A note on server reboots
@@ -436,7 +436,7 @@ Options:
 # Option 1: Run setup script manually
 setup-console-sessions
 # or
-~/.vps/sessions/src/setup.sh
+~/.tmux-persistent-console/setup.sh
 
 # Note: pTTY does not try to persist sessions across server reboots.
 # After a reboot, run setup-console-sessions again. See "A note on server reboots" above.

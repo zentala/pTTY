@@ -94,6 +94,6 @@ set -g status-format[1] ''
 # - Variables only update on actual changes (session switch, resize)
 #
 # Test with:
-# ~/.vps/sessions/tests/test-no-flicker.sh 30
+# ~/.tmux-persistent-console/tests/test-no-flicker.sh 30
 #
 # Should see: "✅ PERFECT: Status bar completely stable"

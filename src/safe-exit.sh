@@ -1,5 +1,5 @@
 #!/bin/bash
-# ~/.vps/sessions/src/safe-exit.sh - Safe exit wrapper for tmux sessions
+# ~/.tmux-persistent-console/safe-exit.sh - Safe exit wrapper for tmux sessions
 # Prevents accidental session termination
 
 safe_exit() {

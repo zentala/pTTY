@@ -1,5 +1,5 @@
 #!/bin/bash
-# ~/.vps/sessions/connect.sh - Easy console connection
+# ~/.tmux-persistent-console/connect.sh - Easy console connection
 
 echo "==================================="
 echo "    PERSISTENT CONSOLE MANAGER     "

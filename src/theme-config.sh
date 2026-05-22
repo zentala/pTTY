@@ -6,7 +6,7 @@
 # Date: 2025-10-11
 #
 # Usage:
-#   source ~/.vps/sessions/src/theme-config.sh
+#   source ~/.tmux-persistent-console/theme-config.sh
 #   echo "$ICON_PTTY_LOGO"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

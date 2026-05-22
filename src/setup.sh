@@ -1,5 +1,5 @@
 #!/bin/bash
-# ~/.vps/sessions/setup.sh - Create 7 persistent tmux sessions
+# ~/.tmux-persistent-console/setup.sh - Create 7 persistent tmux sessions
 
 sessions=("console-1" "console-2" "console-3" "console-4" "console-5" "console-6" "console-7")
 

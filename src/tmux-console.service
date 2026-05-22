@@ -1,10 +1,11 @@
 [Unit]
-Description=Tmux persistent console sessions
-After=network.target
+Description=Tmux persistent console sessions (creates console-1..5 on boot)
+After=default.target
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/bash %h/.vps/sessions/src/setup.sh
+ExecStart=/bin/bash %h/.tmux-persistent-console/setup.sh
+ExecStop=/usr/bin/tmux kill-server
 RemainAfterExit=yes
 
 [Install]

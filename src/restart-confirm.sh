@@ -47,7 +47,7 @@ if command -v gum &>/dev/null; then
         gum style --foreground 226 "⚙️  Restarting $CURRENT_SESSION..."
 
         # Call restart logic
-        ~/.vps/sessions/src/restart-session.sh "$CURRENT_SESSION"
+        ~/.tmux-persistent-console/restart-session.sh "$CURRENT_SESSION"
 
         gum style --foreground 46 "✓ Session restarted successfully"
         sleep 1
@@ -72,7 +72,7 @@ else
 
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
         echo "⚙️  Restarting $CURRENT_SESSION..."
-        ~/.vps/sessions/src/restart-session.sh "$CURRENT_SESSION"
+        ~/.tmux-persistent-console/restart-session.sh "$CURRENT_SESSION"
         echo "✓ Session restarted"
         sleep 1
     else
