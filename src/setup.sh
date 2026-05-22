@@ -1,13 +1,13 @@
 #!/bin/bash
-# ~/.tmux-persistent-console/setup.sh - Create 7 persistent tmux sessions
+# ~/.tmux-persistent-console/setup.sh
+# Create the 5 "active" persistent tmux sessions (console-1..5).
+# Sessions 6-10 are "on-demand" — bind keys exist in tmux.conf but the
+# sessions aren't pre-created (per project design: active vs suspended slots).
 
-sessions=("console-1" "console-2" "console-3" "console-4" "console-5" "console-6" "console-7")
+sessions=("console-1" "console-2" "console-3" "console-4" "console-5")
 
 for session in "${sessions[@]}"; do
-    # Check if session exists
-    tmux has-session -t "$session" 2>/dev/null
-    if [ $? != 0 ]; then
-        # Create new session in detached mode
+    if ! tmux has-session -t "$session" 2>/dev/null; then
         tmux new-session -d -s "$session" -n "main"
         echo "Created session: $session"
     else

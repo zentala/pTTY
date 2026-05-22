@@ -115,34 +115,47 @@ fi
 echo -e "${YELLOW}📁 Creating directories...${NC}"
 mkdir -p "$INSTALL_DIR" "$BIN_DIR"
 
-# Download or copy source files
-if [ -d "./src" ]; then
-    # Local installation
-    echo -e "${YELLOW}📋 Copying local files...${NC}"
-    cp -r src/* "$INSTALL_DIR/"
-    # Ensure TUI library is copied
-    if [ -d "./src/tui" ]; then
-        mkdir -p "$INSTALL_DIR/tui"
-        cp -r src/tui/* "$INSTALL_DIR/tui/"
+# Resolve source location: if we are running from inside a cloned repo with src/,
+# treat THAT as the source. If $PWD already IS $INSTALL_DIR (common: user cloned to
+# ~/.tmux-persistent-console then ran ./install.sh), skip the copy step entirely —
+# copying src/* over the repo root just creates phantom "modified" duplicates.
+REPO_ROOT="$(pwd)"
+
+if [ -d "$REPO_ROOT/src" ]; then
+    if [ "$REPO_ROOT" = "$INSTALL_DIR" ]; then
+        echo -e "${YELLOW}📋 Running from install dir — using src/ in place (no copy)${NC}"
+    else
+        echo -e "${YELLOW}📋 Copying local files from $REPO_ROOT/src to $INSTALL_DIR${NC}"
+        cp -r "$REPO_ROOT/src/"* "$INSTALL_DIR/"
+        if [ -d "$REPO_ROOT/src/tui" ]; then
+            mkdir -p "$INSTALL_DIR/tui"
+            cp -r "$REPO_ROOT/src/tui/"* "$INSTALL_DIR/tui/"
+        fi
     fi
 else
-    # Remote installation
-    echo -e "${YELLOW}⬇️  Downloading files...${NC}"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/setup.sh" -o "$INSTALL_DIR/setup.sh"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/connect.sh" -o "$INSTALL_DIR/connect.sh"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/tmux.conf" -o "$INSTALL_DIR/tmux.conf"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/uninstall.sh" -o "$INSTALL_DIR/uninstall.sh"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/safe-exit.sh" -o "$INSTALL_DIR/safe-exit.sh"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/console-help.sh" -o "$INSTALL_DIR/console-help.sh"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/help-console.sh" -o "$INSTALL_DIR/help-console.sh"
+    # Remote installation (curl-piped install with no local checkout)
+    REPO_URL_BASE="https://raw.githubusercontent.com/zentala/tmux-persistent-console/main"
+    echo -e "${YELLOW}⬇️  Downloading files from ${REPO_URL_BASE}${NC}"
+    for f in setup.sh connect.sh tmux.conf tmux-console.service uninstall.sh safe-exit.sh console-help.sh help-console.sh; do
+        if ! curl -fsSL "$REPO_URL_BASE/src/$f" -o "$INSTALL_DIR/$f"; then
+            echo -e "${RED}❌ Failed to download $f from $REPO_URL_BASE/src/$f${NC}"
+            exit 1
+        fi
+    done
 
-    # Download TUI library
     mkdir -p "$INSTALL_DIR/tui"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/tui/tui-core.sh" -o "$INSTALL_DIR/tui/tui-core.sh"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/tui/tui-menu.sh" -o "$INSTALL_DIR/tui/tui-menu.sh"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/tui/tui-dialogs.sh" -o "$INSTALL_DIR/tui/tui-dialogs.sh"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/tui/tui-list.sh" -o "$INSTALL_DIR/tui/tui-list.sh"
-    curl -sSL "https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/tui/tui-status.sh" -o "$INSTALL_DIR/tui/tui-status.sh"
+    for f in tui-core.sh tui-menu.sh tui-dialogs.sh tui-list.sh tui-status.sh; do
+        if ! curl -fsSL "$REPO_URL_BASE/src/tui/$f" -o "$INSTALL_DIR/tui/$f"; then
+            echo -e "${RED}❌ Failed to download tui/$f${NC}"
+            exit 1
+        fi
+    done
+fi
+
+# Source location used by the rest of the installer (systemd service etc.)
+SRC_DIR="$INSTALL_DIR"
+if [ "$REPO_ROOT" != "$INSTALL_DIR" ] && [ -d "$REPO_ROOT/src" ]; then
+    SRC_DIR="$INSTALL_DIR"   # already copied above
 fi
 
 # Make scripts executable
@@ -217,33 +230,64 @@ if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
 fi
 
 # Install systemd user service so sessions survive reboot
-echo -e "${YELLOW}🔧 Installing systemd autostart service...${NC}"
+if ! command -v systemctl &> /dev/null; then
+    echo -e "${YELLOW}⚠️  systemctl not found — skipping autostart setup${NC}"
+    echo -e "${YELLOW}   You will need to start sessions manually with: bash $INSTALL_DIR/setup.sh${NC}"
+else
+    echo -e "${YELLOW}🔧 Installing systemd autostart service...${NC}"
 
-if [ ! -f "$INSTALL_DIR/tmux-console.service" ]; then
-    echo -e "${RED}❌ Missing $INSTALL_DIR/tmux-console.service — cannot install autostart${NC}"
-    exit 1
-fi
-
-mkdir -p "$HOME/.config/systemd/user"
-cp "$INSTALL_DIR/tmux-console.service" "$HOME/.config/systemd/user/tmux-console.service"
-systemctl --user daemon-reload
-
-# Enable lingering so user services run without an active login (survives reboot)
-if ! loginctl show-user "$USER" 2>/dev/null | grep -q "Linger=yes"; then
-    echo -e "${YELLOW}   Enabling user lingering (needs sudo)...${NC}"
-    if loginctl enable-linger "$USER" 2>/dev/null; then
-        echo -e "${GREEN}   ✓ Lingering enabled${NC}"
-    elif sudo loginctl enable-linger "$USER" 2>/dev/null; then
-        echo -e "${GREEN}   ✓ Lingering enabled (via sudo)${NC}"
-    else
-        echo -e "${YELLOW}   ⚠ Could not enable lingering — sessions will NOT survive reboot until you run:${NC}"
-        echo -e "${YELLOW}     sudo loginctl enable-linger $USER${NC}"
+    # Prefer src/ as canonical source, fall back to INSTALL_DIR
+    SERVICE_SRC="$INSTALL_DIR/tmux-console.service"
+    if [ -f "$REPO_ROOT/src/tmux-console.service" ]; then
+        SERVICE_SRC="$REPO_ROOT/src/tmux-console.service"
     fi
-fi
+    if [ ! -f "$SERVICE_SRC" ]; then
+        echo -e "${RED}❌ Missing tmux-console.service — cannot install autostart${NC}"
+        exit 1
+    fi
 
-# Enable + start the service (creates console-1..7 immediately)
-systemctl --user enable --now tmux-console.service
-echo -e "${GREEN}✅ Service enabled — sessions will auto-start on boot${NC}"
+    mkdir -p "$HOME/.config/systemd/user"
+    cp "$SERVICE_SRC" "$HOME/.config/systemd/user/tmux-console.service"
+    systemctl --user daemon-reload
+
+    # Enable lingering so user services run without an active login (survives reboot)
+    if ! loginctl show-user "$USER" 2>/dev/null | grep -q "Linger=yes"; then
+        echo -e "${YELLOW}   Enabling user lingering...${NC}"
+        if loginctl enable-linger "$USER" 2>/dev/null; then
+            echo -e "${GREEN}   ✓ Lingering enabled${NC}"
+        elif sudo loginctl enable-linger "$USER" 2>/dev/null; then
+            echo -e "${GREEN}   ✓ Lingering enabled (via sudo)${NC}"
+        else
+            echo -e "${YELLOW}   ⚠ Could not enable lingering — sessions will NOT survive reboot until you run:${NC}"
+            echo -e "${YELLOW}     sudo loginctl enable-linger $USER${NC}"
+        fi
+    fi
+
+    # Enable + start the service
+    if ! systemctl --user enable --now tmux-console.service 2>&1; then
+        echo -e "${RED}❌ systemctl enable --now failed${NC}"
+        systemctl --user status tmux-console.service --no-pager || true
+        exit 1
+    fi
+
+    # Verify the service actually came up — don't trust enable's return code alone
+    sleep 1
+    if ! systemctl --user is-active --quiet tmux-console.service; then
+        echo -e "${RED}❌ tmux-console.service is not active after start${NC}"
+        echo -e "${RED}   Run:  systemctl --user status tmux-console.service${NC}"
+        echo -e "${RED}   And:  journalctl --user -u tmux-console.service -n 30${NC}"
+        exit 1
+    fi
+
+    # And verify the sessions it claims to manage actually exist
+    if ! tmux ls 2>/dev/null | grep -q "^console-1:"; then
+        echo -e "${RED}❌ Service active but no console-* sessions found${NC}"
+        echo -e "${RED}   Check setup.sh:  bash -x $INSTALL_DIR/setup.sh${NC}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}✅ Service active, sessions verified${NC}"
+fi
 
 echo ""
 echo -e "${GREEN}✅ Installation complete!${NC}"
