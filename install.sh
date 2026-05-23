@@ -1,8 +1,10 @@
 #!/bin/bash
 # Tmux Persistent Console - One-line installer
-# curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/install.sh | bash
+# curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash
 
 set -e
+
+PTPC_VERSION="0.1.3"
 
 # Colors for output
 RED='\033[0;31m'
@@ -11,14 +13,60 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Parse flags
+DRY_RUN=0
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run|-n) DRY_RUN=1 ;;
+        --version|-V) echo "tmux-persistent-console v$PTPC_VERSION"; exit 0 ;;
+        --help|-h)
+            cat <<EOF
+Usage: install.sh [--dry-run] [--version] [--help]
+
+  --dry-run   Show what would happen without changing anything
+  --version   Print version and exit
+  --help      This help
+
+One-liner install:
+  curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash
+EOF
+            exit 0
+            ;;
+    esac
+done
+
 # Configuration
 INSTALL_DIR="$HOME/.tmux-persistent-console"
 BIN_DIR="$HOME/bin"
 
 echo -e "${BLUE}==================================="
-echo -e "  TMUX PERSISTENT CONSOLE INSTALLER"
+echo -e "  TMUX PERSISTENT CONSOLE INSTALLER v$PTPC_VERSION"
 echo -e "===================================${NC}"
 echo ""
+
+if [ "$DRY_RUN" -eq 1 ]; then
+    echo -e "${YELLOW}DRY-RUN MODE — would perform:${NC}"
+    echo "  1. Install missing deps:           tmux, fzf, gum (via apt/yum/pacman/brew)"
+    echo "  2. Create directories:             $INSTALL_DIR, $BIN_DIR"
+    echo "  3. Copy scripts:                   src/* → $INSTALL_DIR/"
+    echo "  4. Install tmux.conf:              $INSTALL_DIR/tmux.conf → ~/.tmux.conf (backup made)"
+    echo "  5. Add PATH + safe-exit hooks to:  ~/.bashrc, ~/.zshrc"
+    echo "  6. Install systemd user service:   ~/.config/systemd/user/tmux-console.service"
+    echo "  7. Enable user lingering:          loginctl enable-linger \$USER"
+    echo "  8. Enable + start service:         systemctl --user enable --now tmux-console.service"
+    echo "  9. Verify service is active and console-1..console-5 exist"
+    echo ""
+    echo "To actually install, re-run without --dry-run."
+    exit 0
+fi
+
+# Warn if a legacy install layout is still around
+if [ -d "$HOME/.vps/sessions" ]; then
+    echo -e "${YELLOW}⚠️  Legacy install detected at ~/.vps/sessions${NC}"
+    echo -e "${YELLOW}   You can safely remove it after this install finishes:${NC}"
+    echo -e "${YELLOW}     rm -rf ~/.vps/sessions${NC}"
+    echo ""
+fi
 
 # Check if tmux is installed
 if ! command -v tmux &> /dev/null; then

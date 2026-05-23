@@ -1,5 +1,14 @@
 # Wave 1 — Path universality (`PTTY_DIR` env-var)
 
+> ✅ **Closed early in v0.1.3** (2026-05-23). The underlying bug (stale
+> `~/.vps/sessions/...` paths in `tmux.conf` + scripts) was resolved by
+> a global sed in commit `5982c07` and the install-time guardrails added
+> in `5bc98bc`. We didn't introduce a `PTTY_DIR` env-var — the simpler
+> fix (just write the right path everywhere) was enough. Keeping this
+> file as historical context; if `PTTY_DIR` is ever needed (e.g. for
+> users who want a non-default install location), re-open as a separate
+> task.
+
 **Wave:** 1 (foundation, BLOCKER for everything)
 **Depends on:** none
 **Worktree branch:** `feature/wave-1-ptty-dir`
