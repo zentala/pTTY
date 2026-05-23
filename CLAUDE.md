@@ -59,74 +59,43 @@ When generating any user-facing content for pTTY:
 5. **Differentiate honestly** from tmuxinator (project setup), tmux-resurrect (recovery, loses AI context), zellij (alternative substrate)
 6. **Acknowledge the mechanism** when audience is technical: tmux server keeps process alive in memory; that's how the AI conversation context survives
 7. **Never conflate "reconnect" with "Ctrl+F1"** — reconnect means SSH back into the server (typically via a `~/.ssh/config` alias with `RemoteCommand tmux attach -t console-1`). The F-keys are the in-tmux switcher used **after** you're already attached. Copy that mixes the two layers is wrong.
-8. **Do not claim systemd / boot persistence as a feature** — pTTY does not try to survive server reboot; that's intentional, out-of-scope, and a fundamentally different product class. The `src/tmux-console.service` file exists for users who want it, but it's not a marketing point.
+8. **Distinguish daemon autostart from session persistence** — `install.sh` enables a systemd user service + linger by default (this is intentional and a feature: after server reboot the tmux daemon is ready immediately, no manual start). But the in-memory sessions themselves do NOT survive server reboot — they live in the daemon's RAM. Market the daemon-autostart convenience, never market it as "your sessions survive a server reboot". Users who don't want autostart can opt out at install time (planned: `--no-systemd` flag and/or interactive prompt). The strong persistence claim that IS true is **client-side reboot survival**: your laptop can restart, sessions keep running on the server.
 9. **F-key map is split, not uniform** — write it correctly every time:
    - `Ctrl+F1`–`Ctrl+F5` → consoles 1–5 (active, created on startup)
    - `Ctrl+F6`–`Ctrl+F10` → consoles 6–10 (on-demand / suspended, auto-created on first F-key press)
    - `Ctrl+F11` → Manager Menu (interactive TUI)
    - `Ctrl+F12` → Keyboard cheatsheet / Help Reference
    Never write "Ctrl+F1–F12 switches between consoles" — that overstates the range by 2 keys and erases the manager + help affordances. The "like browser tabs" analogy only applies to `Ctrl+F1`–`F10`.
-10. **Use generic placeholder hostnames in user-facing examples** — `tmux.example.com` for the SSH alias, `your-server.example.com` for the actual HostName. Never use the maintainer's real domains (`zentala.io`, `zentala.eu`, etc.) in README or docs — readers shouldn't have to mentally substitute someone else's domain to understand the example.
+10. **Use generic placeholder hostnames in user-facing examples** — `tmux.example.com` for the SSH alias, `your-server.example.com` for the actual HostName. Never use the maintainer's real domains (`zentala.io`, `zentala.eu`, etc.) in README copy-paste examples or code blocks — readers shouldn't have to mentally substitute someone else's domain to understand the example. **Exception**: hero/marketing screenshots in README may show a real-looking session (e.g. `you@server.lan` is the preferred placeholder for future screenshots — looks natural, generic enough to not pull readers into someone else's infra). The current hero screenshot at `docs/images/ptty-console.png` shows `zentala @ server.lan`; on the next reshoot use `you@server.lan` for a cleaner placeholder. The placeholder rule still binds anything users are expected to copy/paste.
 11. **One SSH connection multiplexes many consoles — don't show repeated `ssh server -t "tmux attach…"` invocations to access different consoles.** The correct pattern is: SSH once, switch with `Ctrl+F1`–`F10`. Multiple SSH commands belong only in advanced examples where the user genuinely wants parallel client windows (e.g., one terminal per monitor).
 
 Full rules, approved taglines, and validation checklist: **[01-vision/VALUE-PROPOSITION.md](01-vision/VALUE-PROPOSITION.md)**
 
 ---
 
-## 🛠 Installing pTTY on a server (current v0.1 state — READ BEFORE INSTALLING)
+## 🛠 Installing pTTY on a server
 
-**If a user asks you to install pTTY on their server, do NOT use `install.sh`.** It is broken in two specific ways and produces a half-working install that LOOKS successful (the script exits with `✅ Installation complete!`) but silently leaves the user with no status bar and no F11/F12/Ctrl+H/Ctrl+R bindings. Both bugs are tracked for v0.2 in [.plan/epic-v0.2-ptty/wave-1-paths.md](.plan/epic-v0.2-ptty/wave-1-paths.md). Until that epic ships, follow the procedure below.
+**Use `install.sh` — it works.** The two bugs described in earlier revisions of this section
+(literal `YOUR_USERNAME` in curl URLs, and `~/.vps/sessions/` path mismatch in `tmux.conf`)
+were fixed in v0.1.3 (commits `5982c07` `fix(paths): replace stale ~/.vps/sessions/ paths`
+and `5bc98bc` `fix(installer): self-install guard, success verification, English link,
+uninstall systemd cleanup`).
 
-### The two bugs (so you can recognize the failure mode)
-
-1. **`install.sh:131-145`** — uses literal `YOUR_USERNAME` placeholder in `curl` URLs (e.g. `https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/src/setup.sh`). Every remote file download returns HTTP 404 and writes the string `404: Not Found` into the destination file. The script does not check `curl` exit codes, so installation continues. When `setup.sh` then runs, it fails with `404:: command not found` and no sessions are created — OR worse, a previous run already created the sessions, and the broken `setup.sh` looks like it succeeded.
-2. **`src/tmux.conf` lines 25, 51, 54, 61, 64** — `source-file ~/.vps/sessions/src/status-format-v4.tmux` and four `run-shell` bindings reference `~/.vps/sessions/src/*.sh`. `INSTALL_DIR` in `install.sh` is `~/.tmux-persistent-console/`, not `~/.vps/sessions/src/`. `tmux` silently skips missing `source-file` targets — no error, no warning, just no status bar and dead F-keys.
-
-### Working install procedure (use this verbatim)
-
+Current install (one-liner promoted in v0.1.3):
 ```bash
-# Pre-clean (in case a previous broken install left junk):
-tmux kill-server 2>/dev/null
-rm -rf ~/.tmux-persistent-console
-rm -f ~/.tmux.conf  # back it up first if the user has a custom one
-
-# Install from git (bypass install.sh entirely):
-git clone --depth 1 https://github.com/zentala/tmux-persistent-console.git /tmp/ptty
-mkdir -p ~/.tmux-persistent-console/tui ~/bin
-cp -r /tmp/ptty/src/. ~/.tmux-persistent-console/
-chmod +x ~/.tmux-persistent-console/*.sh ~/.tmux-persistent-console/tui/*.sh
-ln -sf ~/.tmux-persistent-console/connect.sh ~/bin/tpcon
-cp ~/.tmux-persistent-console/tmux.conf ~/.tmux.conf
-
-# REQUIRED: shim the legacy path that tmux.conf still references.
-# Skip this and the user gets no status bar.
-mkdir -p ~/.vps/sessions
-ln -sfn ~/.tmux-persistent-console ~/.vps/sessions/src
-
-# Create the 7 console sessions:
-bash ~/.tmux-persistent-console/setup.sh
+curl -fsSL https://raw.githubusercontent.com/zentala/ptty/main/install.sh | bash
 ```
 
-### Verification (do not skip — the failure mode is silent)
+The installer also enables a systemd user service + linger by default, so the tmux daemon
+auto-starts on server boot. **Important**: the daemon coming back is convenience, NOT
+session persistence — in-memory sessions die when the server reboots. See rule #8 above.
 
-After install, SSH in and attach:
+Diagnostic script (added in v0.1.3): `scripts/doctor.sh` checks for the historic failure
+modes and confirms paths/symlinks/services are healthy.
 
-```bash
-ssh user@server -t "tmux attach -t console-1"
-```
-
-You MUST see:
-- A bottom status bar with `F1 F2 F3 F4 F5 F6 F7` console tabs, active console highlighted.
-- `Ctrl+F2` through `Ctrl+F7` should switch sessions instantly.
-- `Ctrl+F11` should open the manager menu (TUI).
-- `Ctrl+F12` should show the keyboard cheatsheet.
-
-If the status bar is missing → the `~/.vps/sessions/src` symlink is wrong or missing. Re-run the `ln -sfn` step.
-If F-keys do nothing → `~/.tmux.conf` was not loaded; check `tmux source-file ~/.tmux.conf` output.
-
-### Why not just fix install.sh?
-
-That fix is part of v0.2 (wave-1: `PTTY_DIR` env-var, sed-template in install.sh, eliminate `~/.vps/sessions/` references, CI guard). Touching install.sh as a one-off patch would conflict with the planned `PTTY_DIR` refactor. The user-facing docs above are the bridge until v0.2 lands.
+If you hit issues:
+- Check `scripts/doctor.sh` output first
+- File an issue at https://github.com/zentala/ptty/issues
 
 ---
 
