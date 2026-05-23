@@ -1,6 +1,6 @@
 # 🖥️ pTTY — Persistent terminals for AI coding
 
-> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. SSH back into the server and your tmux sessions are still running — same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`–`F10` jumps between 10 consoles like browser tabs (5 active, 5 on-demand); `Ctrl+F11` opens the manager menu, `Ctrl+F12` shows the keyboard cheatsheet.
+> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, laptop sleep, and even a full client reboot. SSH back into the server and your tmux sessions are still running — same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`–`F10` jumps between 10 consoles like browser tabs (5 active, 5 on-demand); `Ctrl+F11` opens the manager menu, `Ctrl+F12` shows the keyboard cheatsheet.
 
 ![pTTY console — Claude Code running inside tmux, F1–F12 tab bar at the bottom](docs/images/ptty-console.png)
 
@@ -29,12 +29,13 @@ pTTY keeps the **process alive on the server** while you reconnect. tmux runs as
 - ✅ SSH connection drops (network instability, ISP issues, VPN flap)
 - ✅ WiFi glitches (coffee shop, train, hotel)
 - ✅ Laptop sleep (lid close, low battery, OS suspend)
+- ✅ Client reboot (your laptop restarts — sessions keep running on the server; SSH back in and resume)
 - ✅ Network changes (home WiFi → mobile hotspot → office)
 - ✅ Accidental `exit` in the wrong terminal (safe-exit confirmation)
 
 ### What pTTY does NOT protect you from
 
-- ❌ Server reboot (tmux server dies → sessions lost — this is rare; ~5% of real-world session loss)
+- ❌ **Server** reboot — tmux daemon auto-restarts via systemd, but in-memory sessions (AI context, scrollback, running processes) are lost. The daemon comes back ready for new sessions; old ones are gone. Rare in practice (~5% of real-world session loss).
 - ❌ tmux server crash (OOM kill, manual `kill-server`)
 
 If you need crash-survivable AI sessions, that's a different product (state replication + cloud sync). pTTY is laser-focused on the 95% case: client-side disconnections.
@@ -50,7 +51,8 @@ If you need crash-survivable AI sessions, that's a different product (state repl
 ### 🛡️ Disconnection-Resistant Design
 - Sessions persist across SSH disconnects, WiFi changes, and laptop sleep
 - Reconnect over any new network and pick up where you left off
-- Survives server reboots automatically (systemd user service installed by `install.sh`)
+- Survives **client** reboots — your laptop can restart, sessions keep running on the server
+- tmux daemon auto-starts on server boot (systemd user service + linger), so the daemon is ready immediately even after a server restart — though sessions themselves don't survive that
 - AI conversation context stays in memory on the server — not just metadata
 - **Safe-exit protection** — prevents accidental session termination via `exit`
 
