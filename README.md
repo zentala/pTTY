@@ -2,6 +2,8 @@
 
 > Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, and laptop sleep. SSH back into the server and your tmux sessions are still running — same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`–`F10` jumps between 10 consoles like browser tabs (5 active, 5 on-demand); `Ctrl+F11` opens the manager menu, `Ctrl+F12` shows the keyboard cheatsheet.
 
+![pTTY console — Claude Code running inside tmux, F1–F12 tab bar at the bottom](docs/images/ptty-console.png)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Built on tmux](https://img.shields.io/badge/Built%20on-tmux-green.svg)](https://github.com/tmux/tmux)
 [![Shell: Bash](https://img.shields.io/badge/Shell-Bash-blue.svg)](https://www.gnu.org/software/bash/)
