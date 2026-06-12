@@ -182,9 +182,14 @@ if [ -d "$REPO_ROOT/src" ]; then
     fi
 else
     # Remote installation (curl-piped install with no local checkout)
-    REPO_URL_BASE="https://raw.githubusercontent.com/zentala/tmux-persistent-console/main"
+    REPO_URL_BASE="https://raw.githubusercontent.com/zentala/pTTY/main"
     echo -e "${YELLOW}⬇️  Downloading files from ${REPO_URL_BASE}${NC}"
-    for f in setup.sh connect.sh tmux.conf tmux-console.service uninstall.sh safe-exit.sh console-help.sh help-console.sh; do
+    for f in \
+        setup.sh connect.sh tmux.conf tmux-console.service uninstall.sh \
+        safe-exit.sh console-help.sh help-console.sh help-reference.sh \
+        status-format-v4.tmux status-format-v3.tmux status-bar-legacy.sh \
+        theme-config.sh mission-control.sh shortcuts-popup.sh \
+        click-session.sh restart-confirm.sh restart-session.sh; do
         if ! curl -fsSL "$REPO_URL_BASE/src/$f" -o "$INSTALL_DIR/$f"; then
             echo -e "${RED}❌ Failed to download $f from $REPO_URL_BASE/src/$f${NC}"
             exit 1
