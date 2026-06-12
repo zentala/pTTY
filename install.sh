@@ -68,6 +68,14 @@ if [ -d "$HOME/.vps/sessions" ]; then
     echo ""
 fi
 
+# Detect container / CI environments — skip interactive/heavy deps
+SKIP_TUI_DEPS=0
+if [ -f /.dockerenv ] || [ -n "${CI:-}" ] || [ -n "${CONTAINER:-}" ]; then
+    SKIP_TUI_DEPS=1
+    echo -e "${YELLOW}📦 Container/CI environment detected — skipping optional TUI deps (gum, fzf)${NC}"
+    echo -e "${YELLOW}   Set SKIP_TUI_DEPS=0 to force install them.${NC}"
+fi
+
 # Check if tmux is installed
 if ! command -v tmux &> /dev/null; then
     echo -e "${YELLOW}📦 Installing tmux...${NC}"
@@ -95,6 +103,10 @@ fi
 
 # Install TUI tools (gum, fzf)
 echo -e "${YELLOW}🎨 Installing TUI enhancements...${NC}"
+
+if [ "$SKIP_TUI_DEPS" -eq 1 ]; then
+    echo -e "${YELLOW}  ⏭️  Skipping TUI deps (container/CI mode)${NC}"
+else
 
 # Install fzf (fuzzy finder)
 if ! command -v fzf &> /dev/null; then
@@ -158,6 +170,7 @@ if ! command -v gum &> /dev/null; then
 else
     echo -e "${GREEN}  ✅ gum already installed${NC}"
 fi
+fi # end SKIP_TUI_DEPS block
 
 # Create directories
 echo -e "${YELLOW}📁 Creating directories...${NC}"
