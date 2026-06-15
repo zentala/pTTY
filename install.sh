@@ -68,6 +68,14 @@ if [ -d "$HOME/.vps/sessions" ]; then
     echo ""
 fi
 
+# Detect container / CI environments — skip interactive/heavy deps
+SKIP_TUI_DEPS=0
+if [ -f /.dockerenv ] || [ -n "${CI:-}" ] || [ -n "${CONTAINER:-}" ]; then
+    SKIP_TUI_DEPS=1
+    echo -e "${YELLOW}📦 Container/CI environment detected — skipping optional TUI deps (gum, fzf)${NC}"
+    echo -e "${YELLOW}   Set SKIP_TUI_DEPS=0 to force install them.${NC}"
+fi
+
 # Check if tmux is installed
 if ! command -v tmux &> /dev/null; then
     echo -e "${YELLOW}📦 Installing tmux...${NC}"
@@ -95,6 +103,10 @@ fi
 
 # Install TUI tools (gum, fzf)
 echo -e "${YELLOW}🎨 Installing TUI enhancements...${NC}"
+
+if [ "$SKIP_TUI_DEPS" -eq 1 ]; then
+    echo -e "${YELLOW}  ⏭️  Skipping TUI deps (container/CI mode)${NC}"
+else
 
 # Install fzf (fuzzy finder)
 if ! command -v fzf &> /dev/null; then
@@ -158,6 +170,7 @@ if ! command -v gum &> /dev/null; then
 else
     echo -e "${GREEN}  ✅ gum already installed${NC}"
 fi
+fi # end SKIP_TUI_DEPS block
 
 # Create directories
 echo -e "${YELLOW}📁 Creating directories...${NC}"
@@ -182,9 +195,14 @@ if [ -d "$REPO_ROOT/src" ]; then
     fi
 else
     # Remote installation (curl-piped install with no local checkout)
-    REPO_URL_BASE="https://raw.githubusercontent.com/zentala/tmux-persistent-console/main"
+    REPO_URL_BASE="https://raw.githubusercontent.com/zentala/pTTY/main"
     echo -e "${YELLOW}⬇️  Downloading files from ${REPO_URL_BASE}${NC}"
-    for f in setup.sh connect.sh tmux.conf tmux-console.service uninstall.sh safe-exit.sh console-help.sh help-console.sh; do
+    for f in \
+        setup.sh connect.sh tmux.conf tmux-console.service uninstall.sh \
+        safe-exit.sh console-help.sh help-console.sh help-reference.sh \
+        status-format-v4.tmux status-format-v3.tmux status-bar-legacy.sh \
+        theme-config.sh mission-control.sh shortcuts-popup.sh \
+        click-session.sh restart-confirm.sh restart-session.sh; do
         if ! curl -fsSL "$REPO_URL_BASE/src/$f" -o "$INSTALL_DIR/$f"; then
             echo -e "${RED}❌ Failed to download $f from $REPO_URL_BASE/src/$f${NC}"
             exit 1
