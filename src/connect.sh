@@ -12,7 +12,7 @@ echo ""
 tmux ls 2>/dev/null | nl -w2 -s') '
 
 echo ""
-echo "Enter console number (1-7) or 'q' to quit: "
+echo "Enter console number (1-10) or 'q' to quit: "
 read -r choice
 
 case $choice in
@@ -23,6 +23,9 @@ case $choice in
     5) tmux attach-session -t console-5 ;;
     6) tmux attach-session -t console-6 ;;
     7) tmux attach-session -t console-7 ;;
+    8) tmux attach-session -t console-8 ;;
+    9) tmux attach-session -t console-9 ;;
+    10) tmux attach-session -t console-10 ;;
     q) exit 0 ;;
     *) echo "Invalid choice"; exit 1 ;;
 esac

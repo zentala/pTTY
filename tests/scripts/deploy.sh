@@ -85,7 +85,7 @@ if terraform apply -auto-approve; then
     echo "   1. Wait 2-3 minutes for cloud-init to complete"
     echo "   2. Connect via SSH: $SSH_COMMAND"
     echo "   3. Run tests: ./test-tmux-console.sh"
-    echo "   4. Test console switching with Ctrl+F1-F7"
+    echo "   4. Test console switching with Ctrl+F1-F10"
     echo ""
 
     echo -e "${YELLOW}💡 Testing Commands:${NC}"

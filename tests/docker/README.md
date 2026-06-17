@@ -277,7 +277,7 @@ docker exec tmux-test-server bash
 su - testuser -c "tmux ls"
 
 # Reinstall if needed
-su - testuser -c "curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash"
+su - testuser -c "curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash"
 ```
 
 #### "Port already in use"

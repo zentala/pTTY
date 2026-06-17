@@ -37,7 +37,7 @@ test_scroll_behavior() {
     # Step 1: Check initial state
     echo "   Step 1: Checking initial state..."
     local initial_status=$(tmux capture-pane -t "$session_name" -p | tail -1)
-    local initial_has_bar=$(echo "$initial_status" | grep -c "F1.*F7" || true)
+    local initial_has_bar=$(echo "$initial_status" | grep -c "F1.*F10" || true)
 
     if [ "$initial_has_bar" -ne 1 ]; then
         echo -e "   ${RED}❌ FAIL: Status bar not found at bottom initially${NC}"
@@ -63,7 +63,7 @@ test_scroll_behavior() {
     local visible_content=$(tmux capture-pane -t "$session_name" -p)
     local last_visible_line=$(echo "$visible_content" | tail -1)
 
-    local after_scroll_has_bar=$(echo "$last_visible_line" | grep -c "F1.*F7" || true)
+    local after_scroll_has_bar=$(echo "$last_visible_line" | grep -c "F1.*F10" || true)
 
     if [ "$after_scroll_has_bar" -ne 1 ]; then
         echo -e "   ${RED}❌ FAIL: Status bar NOT at bottom after scroll${NC}"
@@ -78,7 +78,7 @@ test_scroll_behavior() {
     echo -e "   ${GREEN}✅ After scroll: Status bar still at bottom${NC}"
 
     # Step 4: Verify bar appears EXACTLY ONCE in visible area
-    local bar_count=$(echo "$visible_content" | grep -c "F1.*F7" || true)
+    local bar_count=$(echo "$visible_content" | grep -c "F1.*F10" || true)
 
     if [ "$bar_count" -ne 1 ]; then
         echo -e "   ${RED}❌ FAIL: Found $bar_count status bars in visible area${NC}"
@@ -168,6 +168,6 @@ else
     echo "   tmux show-options -g status-position"
     echo ""
     echo "   # Verify status bar not in pane content"
-    echo "   tmux capture-pane -p | grep 'F1.*F7'"
+    echo "   tmux capture-pane -p | grep 'F1.*F10'"
     exit 1
 fi

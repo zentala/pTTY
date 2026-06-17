@@ -22,7 +22,7 @@ export ICON_SERVER=""             # Custom - not in network set (fallback to gen
 # Terminal Session States
 export ICON_SESSION_ACTIVE="󰢩"    # nf-md-console_network (f08a9) - currently active
 export ICON_SESSION_AVAILABLE="󰱠"  # nf-md-console_network_outline (f0c60) - created, idle
-export ICON_SESSION_SUSPENDED="󰲝"  # nf-md-network_outline (f0c9d) - not created yet
+export ICON_SESSION_OTHER="󰢩"      # nf-md-console_network (f08a9) - non-current console
 export ICON_SESSION_CRASHED="󰱟"    # nf-md-close_network_outline (f0c5f) - killed/crashed
 
 # Special Functions
@@ -45,7 +45,7 @@ export ICON_SERVER_FALLBACK=""    # null - no icon
 
 export ICON_SESSION_ACTIVE_FALLBACK="▶"
 export ICON_SESSION_AVAILABLE_FALLBACK="○"
-export ICON_SESSION_SUSPENDED_FALLBACK="·"
+export ICON_SESSION_OTHER_FALLBACK="○"
 export ICON_SESSION_CRASHED_FALLBACK="✖"
 
 export ICON_MANAGER_FALLBACK="☰"
@@ -64,7 +64,7 @@ export COLOR_BG_ACTIVE_TAB="colour236"      # Active session tab background
 # Foreground Colors - Session States
 export COLOR_SESSION_ACTIVE="colour39"      # Cyan - active session (NO BOLD)
 export COLOR_SESSION_AVAILABLE="colour255"  # White - available/created session
-export COLOR_SESSION_SUSPENDED="colour240"  # Dark gray - suspended (not created)
+export COLOR_SESSION_OTHER="colour240"      # Dark gray - non-current console
 export COLOR_SESSION_CRASHED="colour196"    # Red - crashed/killed
 
 # Foreground Colors - Special Elements
@@ -132,7 +132,7 @@ show_theme_config() {
     echo "  Logo:      $ICON_PTTY_LOGO"
     echo "  Active:    $ICON_SESSION_ACTIVE"
     echo "  Available: $ICON_SESSION_AVAILABLE"
-    echo "  Suspended: $ICON_SESSION_SUSPENDED"
+    echo "  Other:     $ICON_SESSION_OTHER"
     echo "  Crashed:   $ICON_SESSION_CRASHED"
     echo "  Manager:   $ICON_MANAGER"
     echo "  Help:      $ICON_HELP"
@@ -140,7 +140,7 @@ show_theme_config() {
     echo "Colors:"
     echo "  Active:    $COLOR_SESSION_ACTIVE"
     echo "  Available: $COLOR_SESSION_AVAILABLE"
-    echo "  Suspended: $COLOR_SESSION_SUSPENDED"
+    echo "  Other:     $COLOR_SESSION_OTHER"
     echo "  Crashed:   $COLOR_SESSION_CRASHED"
     echo ""
 }

@@ -49,12 +49,28 @@ jobs:
           echo "✅ Version format is valid: $VERSION_TAG"
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
 
-      - name: 🧪 Run full test suite
-        uses: ./.github/workflows/test-infrastructure.yml
-        with:
-          test_type: 'full'
-          keep_infrastructure: false
-        secrets: inherit
+      - name: 🔧 Setup release validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tmux shellcheck
+
+      - name: 🧪 Run release gates
+        run: |
+          bash -n install.sh
+          for script in src/*.sh tools/*.sh tests/scripts/*.sh; do
+            if [ -f "$script" ]; then
+              bash -n "$script"
+            fi
+          done
+
+          find install.sh src tools tests/scripts -name "*.sh" -type f \
+            ! -name "*old-backup.sh" | while read -r script; do
+            shellcheck "$script"
+          done
+
+          tmux -f src/tmux.conf start-server \; source-file src/tmux.conf \; list-keys >/dev/null
+          bash tools/check-tmux-references.sh
+          bash tools/check-markdown-links.sh README.md CLAUDE.md
 
   # Build release artifacts
   build-artifacts:
@@ -103,7 +119,7 @@ jobs:
               && rm -rf /var/lib/apt/lists/*
 
           # Install tmux-persistent-console
-          RUN curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash
+          RUN curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash
 
           # Configure SSH
           RUN mkdir /var/run/sshd
@@ -124,7 +140,7 @@ jobs:
             config.vm.provision "shell", inline: <<-SHELL
               apt-get update
               apt-get install -y tmux curl
-              curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash
+              curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash
             SHELL
           end
           EOF
@@ -236,9 +252,9 @@ jobs:
           echo "" >> RELEASE_NOTES.md
           echo "## ✨ Features" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
-          echo "- 🖥️ **7 Persistent Console Sessions** with instant Ctrl+F switching" >> RELEASE_NOTES.md
+          echo "- 🖥️ **10 Persistent Console Sessions** with instant Ctrl+F switching" >> RELEASE_NOTES.md
           echo "- 🤖 **AI CLI Optimized** - Perfect for Claude Code & GitHub Copilot CLI" >> RELEASE_NOTES.md
-          echo "- 🛡️ **Crash Resistant** - Sessions survive SSH disconnects and reboots" >> RELEASE_NOTES.md
+          echo "- 🛡️ **Disconnect Resistant** - Sessions survive SSH/client disconnects" >> RELEASE_NOTES.md
           echo "- 🪟 **Windows Terminal Friendly** - Function keys work perfectly" >> RELEASE_NOTES.md
           echo "- ⚡ **Zero Configuration** - Works immediately after installation" >> RELEASE_NOTES.md
           echo "- 🌐 **Remote Access Ready** - SSH integration and documentation" >> RELEASE_NOTES.md
@@ -247,7 +263,7 @@ jobs:
           echo "## 🚀 Quick Installation" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
           echo "\`\`\`bash" >> RELEASE_NOTES.md
-          echo "curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/$VERSION_TAG/install.sh | bash" >> RELEASE_NOTES.md
+          echo "curl -sSL https://raw.githubusercontent.com/zentala/pTTY/$VERSION_TAG/install.sh | bash" >> RELEASE_NOTES.md
           echo "\`\`\`" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
 
@@ -278,15 +294,15 @@ jobs:
 
           echo "## 🔗 Links" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
-          echo "- 📖 [Documentation](https://github.com/zentala/tmux-persistent-console#readme)" >> RELEASE_NOTES.md
-          echo "- 🧪 [Testing Guide](https://github.com/zentala/tmux-persistent-console/tree/main/tests)" >> RELEASE_NOTES.md
-          echo "- 🐛 [Issues](https://github.com/zentala/tmux-persistent-console/issues)" >> RELEASE_NOTES.md
-          echo "- 💬 [Discussions](https://github.com/zentala/tmux-persistent-console/discussions)" >> RELEASE_NOTES.md
+          echo "- 📖 [Documentation](https://github.com/zentala/pTTY#readme)" >> RELEASE_NOTES.md
+          echo "- 🧪 [Testing Guide](https://github.com/zentala/pTTY/tree/main/tests)" >> RELEASE_NOTES.md
+          echo "- 🐛 [Issues](https://github.com/zentala/pTTY/issues)" >> RELEASE_NOTES.md
+          echo "- 💬 [Discussions](https://github.com/zentala/pTTY/discussions)" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
 
           echo "---" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
-          echo "**Full Changelog**: https://github.com/zentala/tmux-persistent-console/compare/$PREVIOUS_TAG...$VERSION_TAG" >> RELEASE_NOTES.md
+          echo "**Full Changelog**: https://github.com/zentala/pTTY/compare/$PREVIOUS_TAG...$VERSION_TAG" >> RELEASE_NOTES.md
 
       - name: 🎉 Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -318,7 +334,7 @@ jobs:
           echo "🧪 Testing installation from GitHub release..."
 
           # Test the installation URL that users will use
-          curl -sSL "https://raw.githubusercontent.com/zentala/tmux-persistent-console/${{ env.VERSION_TAG }}/install.sh" > /tmp/install.sh
+          curl -sSL "https://raw.githubusercontent.com/zentala/pTTY/${{ env.VERSION_TAG }}/install.sh" > /tmp/install.sh
 
           # Validate the installer
           bash -n /tmp/install.sh
@@ -326,7 +342,7 @@ jobs:
 
           # Test that install script can be downloaded and executed
           # (We won't actually run it to avoid installing on CI runner)
-          if curl -sSL "https://raw.githubusercontent.com/zentala/tmux-persistent-console/${{ env.VERSION_TAG }}/install.sh" | head -5 | grep -q "tmux-persistent-console"; then
+          if curl -sSL "https://raw.githubusercontent.com/zentala/pTTY/${{ env.VERSION_TAG }}/install.sh" | head -5 | grep -q "pTTY"; then
             echo "✅ Release installer is accessible and correct"
           else
             echo "❌ Release installer validation failed"
@@ -344,7 +360,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🚀 Installation" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/${{ env.VERSION_TAG }}/install.sh | bash" >> $GITHUB_STEP_SUMMARY
+          echo "curl -sSL https://raw.githubusercontent.com/zentala/pTTY/${{ env.VERSION_TAG }}/install.sh | bash" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Validation" >> $GITHUB_STEP_SUMMARY

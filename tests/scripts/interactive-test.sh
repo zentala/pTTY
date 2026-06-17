@@ -143,7 +143,7 @@ while true; do
                 echo 'Removing existing installation...'
                 uninstall-console || true
                 echo 'Installing fresh copy...'
-                curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash
+                curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash
                 echo 'Testing fresh installation...'
                 ./test-tmux-console.sh
             "

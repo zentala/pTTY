@@ -161,10 +161,11 @@ fi
 # Test 2: Tmux sessions exist
 echo -n "Test 2: Tmux sessions... "
 SESSION_COUNT=$(sshpass -p testpassword ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null testuser@tmux-server "tmux ls 2>/dev/null | wc -l")
-if [ "$SESSION_COUNT" -eq 7 ]; then
-    echo "✅ PASSED (7 sessions)"
+if [ "$SESSION_COUNT" -eq 10 ]; then
+    echo "✅ PASSED (10 sessions)"
 else
     echo "❌ FAILED (found $SESSION_COUNT sessions)"
+    exit 1
 fi
 
 # Test 3: Connect script exists
@@ -177,10 +178,11 @@ fi
 
 # Test 4: Session switching
 echo -n "Test 4: Session switching... "
-if sshpass -p testpassword ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null testuser@tmux-server "tmux has-session -t console-1 && tmux has-session -t console-7" > /dev/null 2>&1; then
+if sshpass -p testpassword ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null testuser@tmux-server "tmux has-session -t console-1 && tmux has-session -t console-10" > /dev/null 2>&1; then
     echo "✅ PASSED"
 else
     echo "❌ FAILED"
+    exit 1
 fi
 
 # Test 5: Multi-user support
@@ -212,7 +214,7 @@ RUN cat > /etc/motd << 'EOF'
 
 SSH Shortcuts configured:
   ssh server  - Main server connection
-  ssh c1-c7   - Direct console connections
+  ssh c1-c3   - Direct console connection examples
   ssh menu    - Interactive menu
   ssh dev     - Connect as devuser
   ssh root    - Admin access

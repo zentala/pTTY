@@ -30,9 +30,10 @@ jobs:
           ignore_paths: |
             tests
             .plan
-          # SC1091: don't follow sourced files (they may not be on the linter's PATH)
-          # SC2086: word-splitting is intentional in some places
-          # SC2155: declare-and-assign is fine for our use
-          ignore_names: ""
+          ignore_names: |
+            console-help-old-backup.sh
+            help-console-old-backup.sh
         env:
+          # SC1091: don't follow sourced files (they may not be on the linter's PATH)
+          # SC2155: declare-and-assign is fine for our use
           SHELLCHECK_OPTS: "-e SC1091 -e SC2155"

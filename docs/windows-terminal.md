@@ -473,7 +473,7 @@ Best fonts for console work:
 3. **Ctrl+Alt+2**: Open Copilot CLI in new tab
 4. **Ctrl+Alt+3**: Open development console in new tab
 5. **Switch between tabs** with Ctrl+Tab
-6. **Within tmux**: Use Ctrl+F1-F7 for instant switching
+6. **Within tmux**: Use Ctrl+F1-F10 for instant switching
 
 ### Multi-Project Management
 ```json

@@ -5,21 +5,18 @@
 # TODO - v0.2 Sprint Backlog
 
 **Version:** v0.2 (in development)
-**Phase:** Documentation Fixes → Refactoring
-**Last Updated:** 2025-10-09
+**Phase:** v0.2 pre-release hardening
+**Last Updated:** 2026-06-18
 
 ---
 
-## 🎯 Current Sprint Goals
+## Current Sprint Goals
 
-1. ✅ Complete folder reorganization
-2. ✅ Define versioning strategy
-3. ✅ Documentation reorganization (Task 006)
-4. 🔴 **CRITICAL:** Fix documentation issues (Tasks 007-010)
-5. ⏳ Refactor to modular architecture (Tasks 001-003)
-6. ⏳ Setup testing framework (Task 004)
+1. Finish `.plan/epic-v0.2-ptty/` release blockers.
+2. Keep runtime behavior, README, CLAUDE.md, and CI gates aligned.
+3. Do not publish v0.2 until `.plan/REVIEW.md` changes from NO-GO to GO.
 
-**Progress:** 50% (3/6 sprint goals complete)
+**Current quality gate:** NO-GO pending E002 clean-install verification.
 
 ---
 
@@ -36,32 +33,13 @@
 
 ---
 
-## 🚦 Quality Gate (Must Complete Before Implementation)
-
-### ⚠️ Task 011: Pre-Implementation UX Review - **PAUSED**
+## Historical UX Gate
 
 **[011-pre-implementation-ux-review.md](011-pre-implementation-ux-review.md)** - UX review process
 **[011-UX-ISSUES.md](011-UX-ISSUES.md)** - Issues discovered during review
 
-- **Status:** ⚠️ PAUSED (2025-10-09)
-- **Decision:** ⏸️ **WAITING** - UX needs redesign with user
-- **Issue:** Automated GO was premature - user nie zaaprobował UX
-- **Problem:** Za mało alignment UX ze mną, spec istnieje ale UX nie podoba się
-
-**Co się stało:**
-- ❌ Preview miał błędne ikony (●○✖ zamiast  network icons)
-- ❌ Za mało współpracy z użytkownikiem nad designem
-- ❌ Status bar nie zmieści się na 80 kolumnach
-- ❌ GO decision bez user approval
-
-**Co trzeba zrobić:**
-1. UX Design Workshop z użytkownikiem (iteracyjne projektowanie)
-2. User dostarcza brakujące ikony
-3. Zaprojektować status bar RAZEM
-4. Test w prawdziwym tmux
-5. User approval → dopiero wtedy GO
-
-**Next session:** "Zróbmy UX design workshop razem"
+Task 011 is historical context. The active release gate now lives in
+`.plan/REVIEW.md` and `.plan/epic-v0.2-ptty/ORCHESTRATOR.md`.
 
 ---
 
@@ -198,27 +176,15 @@
 
 ---
 
-## 🚦 Current Status
+## Current Status
 
-**✅ Documentation Phase Complete:**
-- All critical documentation issues resolved (Tasks 007-010)
-- CODE-STANDARDS.md complete (946 lines)
-- Testing strategy defined (874 lines)
-- Cross-references systematic
-- Quality improved: 7.5/10 → 9.0/10 ⭐
+**NO-GO for v0.2 release until E002 completes:**
 
-**✅ Quality Gate Passed:**
-- **Task 011: UX Review COMPLETE** (2025-10-09)
-- Decision: 🟢 **GO** - Approved for implementation
-- UX scores: Status Bar 9/10, Manager 9/10, Help 8/10, Safe Exit 10/10
-- Issues: 3 found (non-blocking, scheduled for v0.2.1/v0.3)
-- Reviewer: Senior Engineer (Claude Code) + zentala
-
-**🟢 Implementation Ready:**
-- ✅ Tasks 001-004 APPROVED to start
-- ✅ Zero blockers remaining
-- ✅ All requirements clear and validated
-- 🎯 **Next:** Start Task 001 (State Management refactoring)
+- 10-console runtime behavior is implemented and verified.
+- F11 Manager binding is verified against the installed script set.
+- Server reboot claims are limited to daemon autostart / empty-session recreation.
+- CI fails on shell, tmux config, installer reference, and markdown-link errors.
+- Clean install verification is recorded in `.plan/REVIEW.md`.
 
 ---
 
@@ -308,16 +274,7 @@
 
 ---
 
-**Current Phase:** ⚠️ UX Design (v0.2 planning)
+**Current phase:** v0.2 release hardening.
 
-**Quality Gate:** ⏸️ PAUSED (Task 011 - UX needs user approval)
-
-**Blocker:** Status bar UX nie został zaaprobowany przez użytkownika
-
-**Next Session:**
-- UX Design Workshop z użytkownikiem
-- Zaprojektować status bar razem (iteracyjnie)
-- User dostarcza brakujące ikony
-- Powtórny review → GO decision
-
-**Command:** "Zróbmy UX design workshop - uruchom ux-design-workshop.sh"
+**Quality gate:** NO-GO until `.plan/epic-v0.2-ptty/tasks/E002-T07-clean-install-release-verification.md`
+is completed.

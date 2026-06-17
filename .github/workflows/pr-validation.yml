@@ -29,9 +29,10 @@ jobs:
       - name: 📋 Lint shell scripts
         run: |
           echo "🔍 Linting shell scripts..."
-          find . -name "*.sh" -type f | while read -r script; do
+          find install.sh src tools tests/scripts -name "*.sh" -type f \
+            ! -name "*old-backup.sh" | while read -r script; do
             echo "Checking: $script"
-            shellcheck "$script" || echo "⚠️ ShellCheck issues in $script"
+            shellcheck "$script"
           done
 
       - name: ✅ Validate syntax
@@ -61,8 +62,16 @@ jobs:
       - name: 🧪 Test tmux config
         run: |
           echo "🔍 Testing tmux configuration..."
-          tmux -f src/tmux.conf -C list-sessions 2>/dev/null || true
+          tmux -f src/tmux.conf start-server \; source-file src/tmux.conf \; list-keys >/dev/null
           echo "✅ Tmux configuration is valid"
+
+      - name: 🔗 Validate tmux references
+        run: |
+          bash tools/check-tmux-references.sh
+
+      - name: 🔗 Validate markdown links
+        run: |
+          bash tools/check-markdown-links.sh README.md CLAUDE.md
 
       - name: 🏗️ Validate Terraform
         uses: hashicorp/setup-terraform@v3
@@ -154,7 +163,8 @@ jobs:
               if grep -q "## .*$section" README.md; then
                 echo "✅ Found section: $section"
               else
-                echo "⚠️ Missing section: $section"
+                echo "❌ Missing section: $section"
+                exit 1
               fi
             done
           else

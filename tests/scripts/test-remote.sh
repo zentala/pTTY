@@ -79,13 +79,13 @@ fi
 
 # Test 2: Console sessions exist
 ((TESTS_TOTAL++))
-if run_remote "tmux ls | grep -E 'console-[1-7]'" "Test 2: Console sessions created"; then
+if run_remote "tmux ls | grep -E 'console-(10|[1-9])'" "Test 2: Console sessions created"; then
     ((TESTS_PASSED++))
 fi
 
-# Test 3: All 7 sessions exist
+# Test 3: All 10 sessions exist
 ((TESTS_TOTAL++))
-if run_remote "[ \$(tmux ls | grep -c 'console-') -eq 7 ]" "Test 3: All 7 console sessions exist"; then
+if run_remote "[ \$(tmux ls | grep -c 'console-') -eq 10 ]" "Test 3: All 10 console sessions exist"; then
     ((TESTS_PASSED++))
 fi
 
@@ -141,7 +141,7 @@ if [ $TESTS_PASSED -eq $TESTS_TOTAL ]; then
     echo ""
     echo -e "${BLUE}🚀 Interactive Testing Available:${NC}"
     echo "   Connect manually: $SSH_COMMAND"
-    echo "   Test Ctrl+F1-F7 switching"
+    echo "   Test Ctrl+F1-F10 switching"
     echo "   Try: connect-console"
     echo ""
     RESULT=0

@@ -38,7 +38,7 @@ runcmd:
   - chown -R testuser:testuser /home/testuser
 
   # Download and install tmux-persistent-console
-  - su - testuser -c 'curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash'
+  - su - testuser -c 'curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash'
 
   # Create a simple test script
   - |
@@ -99,9 +99,9 @@ runcmd:
     - test-tmux-console.sh      # Run test suite
     - tmux attach -t console-1  # Direct to console-1
 
-    Function keys (Ctrl+F1-F7) work for session switching!
+    Function keys (Ctrl+F1-F10) work for session switching!
 
-    Repository: https://github.com/zentala/tmux-persistent-console
+    Repository: https://github.com/zentala/pTTY
     ===============================================
     EOF
 

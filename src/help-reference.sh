@@ -15,16 +15,14 @@ cat << 'EOF'
   KEYBOARD SHORTCUTS
 
     Direct Jump:
-      F1-F7          Jump to console 1-7
-      Ctrl+F1-F7     Same as F1-F7
-      Ctrl+1-7       Alternative jump
+      Ctrl+F1-F10    Jump to console 1-10
 
     Navigation:
       Ctrl+←         Previous console
       Ctrl+→         Next console
 
     Management:
-      F11            Console Manager (interactive menu)
+      Ctrl+F11       Console Manager (interactive menu)
       Ctrl+R         Restart current console (with confirmation)
       Ctrl+D         Disconnect safely (detach)
       Ctrl+?         Show keyboard shortcuts popup
@@ -41,7 +39,7 @@ cat << 'EOF'
     Console tabs show:
       Icon     Active session (has processes)
       Icon     Empty/idle session
-      Number   Console number (1-7)
+      Number   Console number (1-10)
       Name     Current window name
 
     Active tab highlighted in cyan with shadow effect
@@ -50,20 +48,20 @@ cat << 'EOF'
   SESSIONS
 
     • All sessions are persistent (survive disconnects)
-    • Consoles 1-5 start automatically on boot
-    • Consoles 6-7 start on demand (lazy start)
+    • Consoles 1-10 start automatically
     • Type 'exit' to safely detach (won't kill session)
-    • Sessions survive SSH disconnects and server reboots
+    • Sessions survive SSH disconnects and client reboots
+    • Server reboots recreate empty sessions, not in-memory context
 
 
   HELP & SUPPORT
 
-    Documentation:  github.com/zentala/tmux-persistent-console
-    Report Bug:     github.com/zentala/tmux-persistent-console/issues
+    Documentation:  github.com/zentala/pTTY
+    Report Bug:     github.com/zentala/pTTY/issues
     Author:         Zentala
 
 
-  Press F1-F7 or click tab to switch consoles
+  Press Ctrl+F1-F10 or click a tab to switch consoles
 
 
 EOF
@@ -71,7 +69,7 @@ EOF
 # Keep window open (static display, no input)
 echo ""
 echo "  This is a read-only reference window."
-echo "  Switch to another console using F1-F7 or close this tab."
+echo "  Switch to another console using Ctrl+F1-F10 or close this tab."
 echo ""
 
 # Sleep forever (keep window visible)

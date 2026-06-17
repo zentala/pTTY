@@ -8,7 +8,7 @@ echo ""
 
 # Kill all console sessions
 echo "🔄 Stopping console sessions..."
-for i in {1..7}; do
+for i in {1..10}; do
     if tmux has-session -t "console-$i" 2>/dev/null; then
         tmux kill-session -t "console-$i"
         echo "   ✓ Stopped console-$i"
@@ -40,5 +40,5 @@ echo "✅ Tmux Persistent Console has been removed!"
 echo "   Sessions stopped, config cleaned up."
 echo ""
 echo "💡 Tip: You can reinstall anytime with:"
-echo "   curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/tmux-persistent-console/main/install.sh | bash"
+echo "   curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash"
 echo ""

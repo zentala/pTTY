@@ -108,10 +108,11 @@ case "$ACTION" in
         # Test tmux sessions
         echo -n "Test: Tmux sessions exist... "
         SESSION_COUNT=$(sshpass -p testpassword ssh -p 2222 -o StrictHostKeyChecking=no testuser@localhost "tmux ls 2>/dev/null | wc -l")
-        if [ "$SESSION_COUNT" -eq 7 ]; then
-            echo -e "${GREEN}✅ PASSED (7 sessions)${NC}"
+        if [ "$SESSION_COUNT" -eq 10 ]; then
+            echo -e "${GREEN}✅ PASSED (10 sessions)${NC}"
         else
             echo -e "${RED}❌ FAILED (found $SESSION_COUNT sessions)${NC}"
+            exit 1
         fi
 
         echo ""
