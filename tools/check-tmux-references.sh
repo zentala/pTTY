@@ -29,7 +29,7 @@ while IFS= read -r ref; do
     rel_path="${ref#"$INSTALL_PREFIX"}"
     check_file "$rel_path"
 done < <(
-    grep -Eo "$INSTALL_PREFIX[A-Za-z0-9_./-]+" "$TMUX_CONF" |
+    grep -Eo "${INSTALL_PREFIX}[A-Za-z0-9_./-]+" "$TMUX_CONF" |
         sed "s/[\"';].*$//" |
         sort -u
 )
