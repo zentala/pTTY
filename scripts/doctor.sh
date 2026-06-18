@@ -1,9 +1,10 @@
 #!/bin/bash
-# scripts/doctor.sh — one-shot install health check for tmux-persistent-console.
+# scripts/doctor.sh — one-shot pTTY install health check.
 # Prints a colored report and exits 0 if everything is healthy, 1 if any
 # critical check failed, 2 if only warnings.
 #
-# Run with:  bash scripts/doctor.sh
+# Run installed:  ptty-doctor
+# Run from repo:  bash scripts/doctor.sh
 
 set -u
 
@@ -15,6 +16,7 @@ NC='\033[0m'
 
 INSTALL_DIR="$HOME/.tmux-persistent-console"
 SERVICE_PATH="$HOME/.config/systemd/user/tmux-console.service"
+NO_SYSTEMD_MARKER="$INSTALL_DIR/.no-systemd"
 CONTAINER_CI=0
 
 if [ -f /.dockerenv ] || [ -n "${CI:-}" ] || [ -n "${CONTAINER:-}" ]; then
@@ -65,7 +67,7 @@ fi
 section "tmux.conf"
 if [ -f "$HOME/.tmux.conf" ]; then
     if grep -q "^# tmux-persistent-console config" "$HOME/.tmux.conf" 2>/dev/null; then
-        ok "~/.tmux.conf installed by tmux-persistent-console"
+        ok "~/.tmux.conf installed by pTTY"
     else
         warn "~/.tmux.conf exists but doesn't look like ours (no marker comment)"
     fi
@@ -85,8 +87,8 @@ if [ -d "$HOME/.vps/sessions" ]; then
 fi
 
 section "systemd user service"
-if [ "$CONTAINER_CI" -eq 1 ]; then
-    ok "systemd service checks skipped in container/CI mode"
+if [ "$CONTAINER_CI" -eq 1 ] || [ -f "$NO_SYSTEMD_MARKER" ]; then
+    ok "systemd service checks skipped"
 elif command -v systemctl &> /dev/null; then
     if [ -f "$SERVICE_PATH" ]; then
         ok "service file installed at $SERVICE_PATH"
@@ -110,8 +112,8 @@ else
 fi
 
 section "User lingering"
-if [ "$CONTAINER_CI" -eq 1 ]; then
-    ok "user lingering checks skipped in container/CI mode"
+if [ "$CONTAINER_CI" -eq 1 ] || [ -f "$NO_SYSTEMD_MARKER" ]; then
+    ok "user lingering checks skipped"
 elif command -v loginctl &> /dev/null; then
     if loginctl show-user "$USER" 2>/dev/null | grep -q "Linger=yes"; then
         ok "Linger=yes (service will run when nobody is logged in)"

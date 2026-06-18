@@ -15,11 +15,11 @@ if [ "$CURRENT_SESSION" = "help" ] || [ "$CURRENT_SESSION" = "manager" ]; then
             "⚠️  Cannot restart special session
 
 Session '$CURRENT_SESSION' is a system window.
-Use F1-F7 to switch to a console first."
+Use F1-F10 to switch to a console first."
         sleep 2
     else
         echo "⚠️  Cannot restart special session '$CURRENT_SESSION'"
-        echo "Use F1-F7 to switch to a console first."
+        echo "Use F1-F10 to switch to a console first."
         sleep 2
     fi
     exit 1

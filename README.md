@@ -112,7 +112,7 @@ bash install.sh
 After install you can verify everything is wired up:
 
 ```bash
-bash scripts/doctor.sh
+ptty-doctor
 ```
 
 Should print all green; if anything is yellow/red it tells you exactly what's wrong.
@@ -349,8 +349,11 @@ pTTY/
 
 ### System Requirements
 - Linux/macOS with bash
-- tmux 2.0+ (will install if missing)
+- tmux 3.2+ (will install if missing where the package manager provides it)
 - SSH access to remote servers
+
+`tmux` 3.2+ is required because pTTY uses popup-based controls for the manager
+and help surfaces. Older tmux versions do not support those bindings reliably.
 
 ### Manual Installation
 ```bash
@@ -360,6 +363,9 @@ cd pTTY
 
 # Install
 ./install.sh
+
+# Optional: install without systemd user autostart
+./install.sh --no-systemd
 
 # Or copy files manually to ~/.tmux-persistent-console/
 mkdir -p ~/.tmux-persistent-console

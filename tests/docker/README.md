@@ -1,4 +1,4 @@
-# 🐳 Docker Testing for Tmux Persistent Console
+# 🐳 Docker Testing for pTTY
 
 > Fast, local testing without cloud infrastructure dependency
 

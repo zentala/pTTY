@@ -1,5 +1,5 @@
 #!/bin/bash
-# Local Docker testing for tmux-persistent-console
+# Local Docker testing for pTTY
 
 set -e
 
@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-echo -e "${BLUE}🐳 Tmux Persistent Console - Docker Testing${NC}"
+echo -e "${BLUE}🐳 pTTY - Docker Testing${NC}"
 echo "=============================================="
 
 # Function to cleanup containers

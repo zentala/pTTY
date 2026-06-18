@@ -33,7 +33,7 @@ set -g status-left '\
 '
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# CENTER: Console tabs F1-F7 (using window-status)
+# CENTER: Console tabs F1-F10 (using window-status)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # Terminal icon:  (nf-md-console_network_outline f0c60)

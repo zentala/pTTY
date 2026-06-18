@@ -10,7 +10,7 @@ if ! command -v gum &>/dev/null; then
 
   ⌨️  KEYBOARD SHORTCUTS
 
-  F1-F7       Jump to console
+  F1-F10      Jump to console
   Ctrl+←→     Prev/Next
   Ctrl+R      Restart (confirm)
   F11         Manager Menu
@@ -33,7 +33,7 @@ gum style \
     --align left \
     "  ⌨️  KEYBOARD SHORTCUTS
 
-  F1-F7       Jump to console
+  F1-F10      Jump to console
   Ctrl+←→     Prev/Next console
   Ctrl+R      Restart current (confirm)
   F11         Manager Menu

@@ -1,8 +1,8 @@
 #!/bin/bash
-# tmux-persistent-console uninstaller
+# pTTY uninstaller
 
 echo "==================================="
-echo "  TMUX PERSISTENT CONSOLE REMOVAL  "
+echo "          pTTY REMOVAL             "
 echo "==================================="
 echo ""
 
@@ -35,8 +35,10 @@ if [ -f ~/.zshrc ] && grep -q "connect-console" ~/.zshrc; then
     echo "   ✓ Removed aliases from ~/.zshrc"
 fi
 
+rm -f ~/bin/setup-console-sessions ~/bin/connect-console ~/bin/console-help ~/bin/ptty-doctor ~/bin/uninstall-console
+
 echo ""
-echo "✅ Tmux Persistent Console has been removed!"
+echo "✅ pTTY has been removed!"
 echo "   Sessions stopped, config cleaned up."
 echo ""
 echo "💡 Tip: You can reinstall anytime with:"

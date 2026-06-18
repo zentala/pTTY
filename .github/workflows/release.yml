@@ -18,6 +18,7 @@ on:
 
 env:
   TF_VERSION: "1.6.0"
+  VERSION_TAG: ${{ github.event_name == 'push' && github.ref_name || github.event.inputs.version }}
 
 jobs:
   # Pre-release validation
@@ -90,7 +91,7 @@ jobs:
         id: package
         run: |
           VERSION_TAG="${{ env.VERSION_TAG }}"
-          ARTIFACT_NAME="tmux-persistent-console-${VERSION_TAG}"
+          ARTIFACT_NAME="ptty-${VERSION_TAG}"
 
           echo "📦 Creating release package: $ARTIFACT_NAME"
 
@@ -104,6 +105,7 @@ jobs:
 
           # Copy source files
           cp -r src/ "release/$ARTIFACT_NAME/"
+          cp -r scripts/ "release/$ARTIFACT_NAME/"
           cp -r docs/ "release/$ARTIFACT_NAME/"
 
           # Create installation variants
@@ -120,7 +122,7 @@ jobs:
               openssh-server \
               && rm -rf /var/lib/apt/lists/*
 
-          # Install tmux-persistent-console
+          # Install pTTY
           RUN curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash
 
           # Configure SSH
@@ -153,20 +155,21 @@ jobs:
           # Offline installer (includes all files)
           cat > "release/$ARTIFACT_NAME/variants/install-offline.sh" << 'EOF'
           #!/bin/bash
-          # Tmux Persistent Console - Offline installer
+          # pTTY - Offline installer
           # This script assumes all files are in the same directory
 
           SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
           INSTALL_DIR="$HOME/.tmux-persistent-console"
           BIN_DIR="$HOME/bin"
 
-          echo "Installing tmux-persistent-console from local files..."
+          echo "Installing pTTY from local files..."
 
           # Create directories
           mkdir -p "$INSTALL_DIR" "$BIN_DIR"
 
           # Copy files
           cp "$SCRIPT_DIR/../src/"* "$INSTALL_DIR/"
+          cp "$SCRIPT_DIR/../scripts/doctor.sh" "$INSTALL_DIR/doctor.sh"
           chmod +x "$INSTALL_DIR"/*.sh
 
           # Install tmux config
@@ -175,6 +178,7 @@ jobs:
           # Create commands
           ln -sf "$INSTALL_DIR/setup.sh" "$BIN_DIR/setup-console-sessions"
           ln -sf "$INSTALL_DIR/connect.sh" "$BIN_DIR/connect-console"
+          ln -sf "$INSTALL_DIR/doctor.sh" "$BIN_DIR/ptty-doctor"
           ln -sf "$INSTALL_DIR/uninstall.sh" "$BIN_DIR/uninstall-console"
 
           # Create sessions
@@ -310,7 +314,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.VERSION_TAG }}
-          name: "Tmux Persistent Console ${{ env.VERSION_TAG }}"
+          name: "pTTY ${{ env.VERSION_TAG }}"
           body_path: RELEASE_NOTES.md
           prerelease: ${{ github.event.inputs.prerelease || false }}
           files: |

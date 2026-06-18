@@ -1,4 +1,4 @@
-# Dockerfile for tmux-persistent-console test client
+# Dockerfile for pTTY test client
 FROM ubuntu:24.04
 
 # Set environment
@@ -34,7 +34,7 @@ RUN mkdir -p /home/client/.ssh && \
 
 # Create SSH aliases configuration
 RUN cat > /home/client/.ssh/config << 'EOF'
-# Tmux Persistent Console - Test Server Connections
+# pTTY - Test Server Connections
 
 # Main server connection
 Host server
@@ -168,12 +168,13 @@ else
     exit 1
 fi
 
-# Test 3: Connect script exists
-echo -n "Test 3: Connect script... "
-if sshpass -p testpassword ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null testuser@tmux-server "which connect-console" > /dev/null 2>&1; then
+# Test 3: Installed commands exist
+echo -n "Test 3: Installed commands... "
+if sshpass -p testpassword ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null testuser@tmux-server "which connect-console && which ptty-doctor" > /dev/null 2>&1; then
     echo "✅ PASSED"
 else
     echo "❌ FAILED"
+    exit 1
 fi
 
 # Test 4: Session switching

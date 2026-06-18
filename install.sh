@@ -1,10 +1,11 @@
 #!/bin/bash
-# Tmux Persistent Console - One-line installer
+# pTTY - One-line installer
 # curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash
 
 set -e
 
 PTPC_VERSION="0.1.3"
+MIN_TMUX_VERSION="3.2"
 
 # Colors for output
 RED='\033[0;31m'
@@ -15,17 +16,20 @@ NC='\033[0m' # No Color
 
 # Parse flags
 DRY_RUN=0
+NO_SYSTEMD=0
 for arg in "$@"; do
     case "$arg" in
         --dry-run|-n) DRY_RUN=1 ;;
-        --version|-V) echo "tmux-persistent-console v$PTPC_VERSION"; exit 0 ;;
+        --no-systemd) NO_SYSTEMD=1 ;;
+        --version|-V) echo "pTTY v$PTPC_VERSION"; exit 0 ;;
         --help|-h)
             cat <<EOF
-Usage: install.sh [--dry-run] [--version] [--help]
+Usage: install.sh [--dry-run] [--no-systemd] [--version] [--help]
 
-  --dry-run   Show what would happen without changing anything
-  --version   Print version and exit
-  --help      This help
+  --dry-run     Show what would happen without changing anything
+  --no-systemd  Skip systemd user service setup and create sessions directly
+  --version     Print version and exit
+  --help        This help
 
 One-liner install:
   curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash
@@ -40,7 +44,7 @@ INSTALL_DIR="$HOME/.tmux-persistent-console"
 BIN_DIR="$HOME/bin"
 
 echo -e "${BLUE}==================================="
-echo -e "  TMUX PERSISTENT CONSOLE INSTALLER v$PTPC_VERSION"
+echo -e "  pTTY INSTALLER v$PTPC_VERSION"
 echo -e "===================================${NC}"
 echo ""
 
@@ -55,6 +59,8 @@ if [ "$DRY_RUN" -eq 1 ]; then
     echo "  7. Enable user lingering:          loginctl enable-linger \$USER"
     echo "  8. Enable + start service:         systemctl --user enable --now tmux-console.service"
     echo "  9. Verify service is active and console-1..console-10 exist"
+    echo ""
+    echo "With --no-systemd: skip steps 6-8 and create sessions directly."
     echo ""
     echo "To actually install, re-run without --dry-run."
     exit 0
@@ -102,6 +108,45 @@ if ! command -v tmux &> /dev/null; then
     fi
     echo -e "${GREEN}✅ Tmux installed successfully${NC}"
 fi
+
+tmux_version_ge() {
+    local actual="$1"
+    local required="$2"
+    local actual_major actual_minor required_major required_minor
+
+    actual="${actual#tmux }"
+    actual="${actual%%[!0-9.]*}"
+    required="${required%%[!0-9.]*}"
+
+    actual_major="${actual%%.*}"
+    actual_minor="${actual#*.}"
+    actual_minor="${actual_minor%%.*}"
+    required_major="${required%%.*}"
+    required_minor="${required#*.}"
+    required_minor="${required_minor%%.*}"
+
+    actual_minor="${actual_minor:-0}"
+    required_minor="${required_minor:-0}"
+    actual_major="${actual_major:-0}"
+    required_major="${required_major:-0}"
+
+    if [ "$actual_major" -gt "$required_major" ]; then
+        return 0
+    fi
+    if [ "$actual_major" -eq "$required_major" ] && [ "$actual_minor" -ge "$required_minor" ]; then
+        return 0
+    fi
+    return 1
+}
+
+TMUX_VERSION="$(tmux -V 2>/dev/null || true)"
+if ! tmux_version_ge "$TMUX_VERSION" "$MIN_TMUX_VERSION"; then
+    echo -e "${RED}❌ pTTY requires tmux ${MIN_TMUX_VERSION}+ for popup-based F11/F12 controls.${NC}"
+    echo -e "${RED}   Detected: ${TMUX_VERSION:-unknown}${NC}"
+    echo -e "${YELLOW}   Upgrade tmux with your OS package manager or install a newer tmux build.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ tmux version OK: $TMUX_VERSION${NC}"
 
 # Install TUI tools (gum, fzf)
 echo -e "${YELLOW}🎨 Installing TUI enhancements...${NC}"
@@ -187,12 +232,18 @@ REPO_ROOT="$(pwd)"
 if [ -d "$REPO_ROOT/src" ]; then
     if [ "$REPO_ROOT" = "$INSTALL_DIR" ]; then
         echo -e "${YELLOW}📋 Running from install dir — using src/ in place (no copy)${NC}"
+        if [ -f "$REPO_ROOT/scripts/doctor.sh" ]; then
+            cp "$REPO_ROOT/scripts/doctor.sh" "$INSTALL_DIR/doctor.sh"
+        fi
     else
         echo -e "${YELLOW}📋 Copying local files from $REPO_ROOT/src to $INSTALL_DIR${NC}"
         cp -r "$REPO_ROOT/src/"* "$INSTALL_DIR/"
         if [ -d "$REPO_ROOT/src/tui" ]; then
             mkdir -p "$INSTALL_DIR/tui"
             cp -r "$REPO_ROOT/src/tui/"* "$INSTALL_DIR/tui/"
+        fi
+        if [ -f "$REPO_ROOT/scripts/doctor.sh" ]; then
+            cp "$REPO_ROOT/scripts/doctor.sh" "$INSTALL_DIR/doctor.sh"
         fi
     fi
 else
@@ -218,6 +269,11 @@ else
             exit 1
         fi
     done
+
+    if ! curl -fsSL "$REPO_URL_BASE/scripts/doctor.sh" -o "$INSTALL_DIR/doctor.sh"; then
+        echo -e "${RED}❌ Failed to download scripts/doctor.sh${NC}"
+        exit 1
+    fi
 fi
 
 # Source location used by the rest of the installer (systemd service etc.)
@@ -261,6 +317,12 @@ cat > "$BIN_DIR/console-help" << 'EOF'
 exec ~/.tmux-persistent-console/console-help.sh "$@"
 EOF
 
+# Create doctor command
+cat > "$BIN_DIR/ptty-doctor" << 'EOF'
+#!/bin/bash
+exec ~/.tmux-persistent-console/doctor.sh "$@"
+EOF
+
 # Create uninstall command
 cat > "$BIN_DIR/uninstall-console" << 'EOF'
 #!/bin/bash
@@ -297,9 +359,17 @@ if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
     export PATH="$BIN_DIR:$PATH"
 fi
 
+rm -f "$INSTALL_DIR/.no-systemd"
+if [ "$NO_SYSTEMD" -eq 1 ]; then
+    touch "$INSTALL_DIR/.no-systemd"
+fi
+
 # Install systemd user service so empty sessions are recreated after boot.
-if [ "$CONTAINER_CI" -eq 1 ]; then
-    echo -e "${YELLOW}📦 Container/CI mode — skipping systemd user service setup${NC}"
+if [ "$CONTAINER_CI" -eq 1 ] || [ "$NO_SYSTEMD" -eq 1 ]; then
+    if [ "$CONTAINER_CI" -eq 1 ]; then
+        touch "$INSTALL_DIR/.no-systemd"
+    fi
+    echo -e "${YELLOW}📦 Skipping systemd user service setup${NC}"
     echo -e "${YELLOW}   Creating console sessions directly for verification.${NC}"
     bash "$INSTALL_DIR/setup.sh"
 
@@ -375,6 +445,7 @@ echo ""
 echo -e "${BLUE}🚀 Quick Start:${NC}"
 echo -e "   ${YELLOW}connect-console${NC}           # Interactive session menu"
 echo -e "   ${YELLOW}tmux attach -t console-1${NC}  # Direct to console-1"
+echo -e "   ${YELLOW}ptty-doctor${NC}              # Health check for bug reports"
 echo ""
 echo -e "${BLUE}🔥 Function Keys (from within tmux):${NC}"
 echo -e "   ${YELLOW}Ctrl+F1-F10${NC} Jump to console 1-10"

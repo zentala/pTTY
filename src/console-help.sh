@@ -14,7 +14,7 @@ source "$TUI_DIR/tui-status.sh"
 show_main_menu() {
     clear
 
-    tui_header "🖥️  TMUX PERSISTENT CONSOLE - Main Control Center"
+    tui_header "🖥️  pTTY - Main Control Center"
     echo ""
 
     local choice=$(tui_menu "Choose action" \
@@ -174,7 +174,7 @@ kill_session_menu() {
 # Show detailed help
 show_detailed_help() {
     clear
-    tui_header "❓ Tmux Persistent Console - Complete Guide"
+    tui_header "❓ pTTY - Complete Guide"
 
     cat << 'EOF'
 

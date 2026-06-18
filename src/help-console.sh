@@ -16,7 +16,7 @@ source "$TUI_DIR/tui-status.sh"
 show_help_content() {
     clear
 
-    tui_header "🖥️  TMUX PERSISTENT CONSOLE - Quick Help Reference"
+    tui_header "🖥️  pTTY - Quick Help Reference"
     echo ""
 
     cat << 'EOF'

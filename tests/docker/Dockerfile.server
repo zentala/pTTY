@@ -1,4 +1,4 @@
-# Dockerfile for tmux-persistent-console test server
+# Dockerfile for pTTY test server
 FROM ubuntu:24.04
 
 # Set environment
@@ -42,19 +42,20 @@ RUN useradd -m -s /bin/bash devuser && \
     usermod -aG sudo devuser && \
     echo 'devuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-# Copy and install tmux-persistent-console through the local installer path.
+# Copy and install pTTY through the local installer path.
 COPY install.sh /tmp/ptty/install.sh
 COPY src/ /tmp/ptty/src/
 COPY scripts/ /tmp/ptty/scripts/
 
 RUN su - testuser -c 'cd /tmp/ptty && CI=1 bash install.sh && CI=1 bash scripts/doctor.sh' && \
     su - devuser -c 'cd /tmp/ptty && CI=1 bash install.sh && CI=1 bash scripts/doctor.sh' && \
-    ln -sf /home/testuser/bin/connect-console /usr/local/bin/connect-console
+    ln -sf /home/testuser/bin/connect-console /usr/local/bin/connect-console && \
+    ln -sf /home/testuser/bin/ptty-doctor /usr/local/bin/ptty-doctor
 
 # Create test script
 RUN cat > /usr/local/bin/test-console.sh << 'EOF'
 #!/bin/bash
-echo "=== Tmux Persistent Console Docker Test ==="
+echo "=== pTTY Docker Test ==="
 echo ""
 echo "Available users:"
 echo "  - testuser (password: testpassword)"
@@ -77,10 +78,10 @@ RUN chmod +x /usr/local/bin/test-console.sh
 # Create MOTD
 RUN cat > /etc/motd << 'EOF'
 ===============================================
-🖥️  TMUX PERSISTENT CONSOLE - DOCKER TEST SERVER
+🖥️  pTTY - DOCKER TEST SERVER
 ===============================================
 
-This is a test environment for tmux-persistent-console.
+This is a test environment for pTTY.
 
 Quick Start:
   - tmux ls                  # List sessions
