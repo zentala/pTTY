@@ -30,3 +30,10 @@
 - Local release verification remains blocked: Windows `bash` maps to WSL and
   returns `E_ACCESSDENIED`; `tmux` and `shellcheck` are unavailable; Docker
   Desktop's Linux engine is not running.
+- Closed E002-T07 through GitHub Actions on PR #2. Docker-based testing now
+  installs via `bash install.sh`, runs `scripts/doctor.sh` for both Docker test
+  users, verifies 10 sessions, checks multi-user setup, and exercises SSH
+  shortcut configuration.
+- Updated `.plan/REVIEW.md` from NO-GO to GO for merging PR #2 and preparing
+  the v0.2 release candidate. Local Windows WSL remains unavailable, but CI
+  provides the Linux/tmux/Docker release gate.

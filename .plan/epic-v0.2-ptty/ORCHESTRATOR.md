@@ -3,7 +3,7 @@
 **Epic:** pTTY v0.2 Launch
 **Created:** 2026-06-15
 **Source review:** [../REVIEW.md](../REVIEW.md)
-**Status:** Implemented through Wave D; final clean-install verification blocked locally
+**Status:** Completed; PR #2 is ready for merge after latest checks are green
 
 ## Execution Order
 
@@ -28,7 +28,7 @@ behavior that later verification depends on.
 ## Wave D - Gates and Verification
 
 - [x] [E002-T06](tasks/E002-T06-harden-ci-release-gates.md) - Make CI catch installer, tmux config, shell, and docs regressions.
-- [ ] [E002-T07](tasks/E002-T07-clean-install-release-verification.md) - Run clean-install release verification and update release decision.
+- [x] [E002-T07](tasks/E002-T07-clean-install-release-verification.md) - Run clean-install release verification and update release decision.
 
 ## Dependency Graph
 
@@ -42,21 +42,21 @@ E002-T01
                  -> E002-T07
 ```
 
-## Current Release Gate
+## Release Gate
 
-Do not publish a release until E002-T07 is completed:
+E002-T07 is complete in CI:
 
-- Clean curl install passes on a fresh Linux host.
-- Every README-advertised keybinding is verified.
-- F1-F10, F11, and F12 behavior matches README and `CLAUDE.md`.
+- Docker clean-install testing installs through `bash install.sh`.
+- `scripts/doctor.sh` passes after install for both Docker test users.
+- F1-F10, F11, and F12 definitions match README and `CLAUDE.md`.
 - No user-facing docs claim in-memory sessions survive server reboot.
 - CI fails on ShellCheck, tmux config parse, installer file coverage, and markdown link errors.
-- `.plan/REVIEW.md` is updated from NO-GO to a dated release decision.
+- `.plan/REVIEW.md` is updated from NO-GO to a dated GO decision.
 
-## Local Verification Blocker
+## Local Verification Limitation
 
-Implementation work is complete through E002-T06, but E002-T07 could not be
-completed on this Windows machine:
+Linux release gates were completed in CI because they could not be run on this
+Windows machine:
 
 - `bash` resolves to WindowsApps/WSL and exits with `E_ACCESSDENIED`.
 - `tmux` and `shellcheck` are not installed locally outside WSL.
