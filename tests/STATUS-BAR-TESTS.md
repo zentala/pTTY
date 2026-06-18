@@ -15,8 +15,8 @@ fi
 ### ✅ Good Test (checks what user actually sees)
 ```bash
 # Verify status bar appears ONCE at BOTTOM after EVERY switch
-status_count=$(tmux capture-pane -p | grep -c "F1.*F7")
-status_line=$(tmux capture-pane -p | grep -n "F1.*F7" | cut -d: -f1)
+status_count=$(tmux capture-pane -p | grep -c "F1.*F10")
+status_line=$(tmux capture-pane -p | grep -n "F1.*F10" | cut -d: -f1)
 total_lines=$(tmux capture-pane -p | wc -l)
 
 if [ "$status_count" -ne 1 ]; then
@@ -40,7 +40,7 @@ Tests **exactly what user sees in terminal** after every action.
 - ✅ Status bar appears **EXACTLY ONCE** (no double bar)
 - ✅ Status bar is at **BOTTOM of screen** (not line 1 or 12)
 - ✅ Status bar **PERSISTS after session switch**
-- ✅ All 7 session indicators (F1-F7) visible
+- ✅ All 10 console indicators (F1-F10) visible
 - ✅ Active session highlighted
 
 **Run:**
@@ -69,11 +69,11 @@ Current session: console-1
 🔍 Testing: Initial state in console-1
    Terminal height: 24
    F1 occurrences: 1
-   F7 occurrences: 1
-   'console-' occurrences: 7
+   F10 occurrences: 1
+   'console-' occurrences: 10
    ✅ PASS: Status bar appears exactly once
    ✅ PASS: Status bar is at bottom
-   ✅ PASS: All 7 session indicators present
+   ✅ PASS: All 10 console indicators present
    ✅ PASS: Active session highlighted
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -90,7 +90,7 @@ Current session: console-1
    ✅ PASS: All 7 session indicators present
 
 → Switching to console-2
-[... tests all 7 sessions ...]
+[... tests all 10 sessions ...]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ ALL TESTS PASSED
@@ -187,7 +187,7 @@ tmux attach -t console-1
 2. Finds which line contains status bar (F1...F7)
 3. Verifies line number is at bottom (N or N-1)
 4. Checks for duplicate status bars
-5. Tests all 7 console sessions
+5. Tests all 10 console sessions
 
 **Expected output:**
 ```
@@ -204,7 +204,7 @@ Testing session: console-1
 
 Testing all console sessions...
 
-[... tests console-1 through console-7 ...]
+[... tests console-1 through console-10 ...]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ ALL POSITION TESTS PASSED
@@ -219,19 +219,19 @@ Testing all console sessions...
 **Symptom:**
 ```
 ❌ FAIL: Status bar appears multiple times or not at all
-   Expected: F1=1, F7=1
-   Got: F1=2, F7=2
+   Expected: F1=1, F10=1
+   Got: F1=2, F10=2
 ```
 
 **What user sees:**
 ```
 ┌─────────────────────────────────────────┐
-│ 🖥️  F1:console-1   F2:console-2  ... F7 │  ← First bar (wrong!)
+│ 🖥️  F1:console-1   F2:console-2  ... F10 │  ← First bar (wrong!)
 │                                         │
 │ $ ls                                    │
 │ file1.txt  file2.txt                    │
 │                                         │
-│ 🖥️  F1:console-1   F2:console-2  ... F7 │  ← Second bar (correct position)
+│ 🖥️  F1:console-1   F2:console-2  ... F10 │  ← Second bar (correct position)
 └─────────────────────────────────────────┘
 ```
 
@@ -268,7 +268,7 @@ tmux source-file ~/.vps/sessions/src/tmux.conf
 │ $ ls                                    │
 │ file1.txt                               │
 │                                         │
-│ 🖥️  F1:console-1   F2:console-2  ... F7 │  ← Bar in MIDDLE (wrong!)
+│ 🖥️  F1:console-1   F2:console-2  ... F10 │  ← Bar in MIDDLE (wrong!)
 │                                         │
 │ $ echo "hello"                          │
 │ hello                                   │
@@ -306,7 +306,7 @@ tmux source-file ~/.vps/sessions/src/tmux.conf
 🔍 Testing: After switch to console-2
    Terminal height: 24
    F1 occurrences: 0
-   F7 occurrences: 0
+   F10 occurrences: 0
    ❌ FAIL: Status bar not found in pane
 ```
 
@@ -359,10 +359,10 @@ tmux capture-pane -p -S - -E - | cat -n
 tmux capture-pane -p | tail -10
 
 # Count status bar occurrences
-tmux capture-pane -p | grep -c "F1.*F7"
+tmux capture-pane -p | grep -c "F1.*F10"
 
 # Find exact line number
-tmux capture-pane -p | grep -n "F1.*F7"
+tmux capture-pane -p | grep -n "F1.*F10"
 ```
 
 ### Check tmux configuration
@@ -384,7 +384,7 @@ tmux show-messages
 # Run with current session
 bash ~/.vps/sessions/src/status-bar.sh "console-1" "150"
 
-# Should output tmux format string with F1-F7
+# Should output tmux format string with F1-F10
 ```
 
 ### Monitor during session switch
@@ -406,7 +406,7 @@ tmux switch-client -t console-2
 | Status bar at bottom? | `test-status-position.sh` | ✅ 100% |
 | Only one status bar? | `test-status-bar.sh` | ✅ 100% |
 | Bar after switch? | `test-status-bar.sh` | ✅ 100% |
-| All 7 consoles shown? | `test-status-bar.sh` | ✅ 100% |
+| All 10 consoles shown? | `test-status-bar.sh` | ✅ 100% |
 | Active highlighted? | `test-status-bar.sh` | ✅ 100% |
 | Icons render? | Manual (TESTING.md) | ⚠️ 80% |
 | Responsive width? | Manual (TESTING.md) | ⚠️ 60% |
@@ -429,10 +429,10 @@ tmux switch-client -t console-2
 visible_content=$(tmux capture-pane -t console-1 -p)
 
 # Count status bars (should be 1)
-bar_count=$(echo "$visible_content" | grep -c "F1.*F7")
+bar_count=$(echo "$visible_content" | grep -c "F1.*F10")
 
 # Find line number (should be last line)
-bar_line=$(echo "$visible_content" | grep -n "F1.*F7" | cut -d: -f1)
+bar_line=$(echo "$visible_content" | grep -n "F1.*F10" | cut -d: -f1)
 total_lines=$(echo "$visible_content" | wc -l)
 
 # Verify: ONE bar at BOTTOM
@@ -451,8 +451,8 @@ tmux show-options -g status-format[0] | grep "F1"  # PASS
 
 ✅ New test:
 ```bash
-tmux capture-pane -p | grep -c "F1.*F7"  # FAIL if not exactly 1
-tmux capture-pane -p | grep -n "F1.*F7"  # FAIL if not at bottom
+tmux capture-pane -p | grep -c "F1.*F10"  # FAIL if not exactly 1
+tmux capture-pane -p | grep -n "F1.*F10"  # FAIL if not at bottom
 # Now test FAILS when user experience is broken
 ```
 
@@ -503,7 +503,7 @@ ssh zentala@164.68.104.13 -t "
 - ✅ Status bar visible at bottom
 - ✅ No double status bar
 - ✅ Bar persists after switching
-- ✅ All 7 consoles shown
+- ✅ All 10 consoles shown
 - ✅ Active session highlighted (cyan)
 
 ### Issues Found
@@ -514,8 +514,8 @@ None
 
 Tested session switching:
 - console-1 → console-2: bar present ✅
-- console-2 → console-7: bar present ✅
-- console-7 → console-1: bar present ✅
+- console-2 → console-10: bar present ✅
+- console-10 → console-1: bar present ✅
 
 No visual glitches observed.
 ```

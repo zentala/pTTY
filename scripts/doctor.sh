@@ -15,6 +15,11 @@ NC='\033[0m'
 
 INSTALL_DIR="$HOME/.tmux-persistent-console"
 SERVICE_PATH="$HOME/.config/systemd/user/tmux-console.service"
+CONTAINER_CI=0
+
+if [ -f /.dockerenv ] || [ -n "${CI:-}" ] || [ -n "${CONTAINER:-}" ]; then
+    CONTAINER_CI=1
+fi
 
 errors=0
 warnings=0
@@ -27,6 +32,11 @@ section() { echo; echo -e "${BLUE}── $* ──${NC}"; }
 
 section "Binaries"
 for bin in tmux ssh systemctl loginctl; do
+    if [ "$CONTAINER_CI" -eq 1 ] && { [ "$bin" = "systemctl" ] || [ "$bin" = "loginctl" ]; }; then
+        ok "$bin skipped in container/CI mode"
+        continue
+    fi
+
     if command -v "$bin" &> /dev/null; then
         ok "$bin: $(command -v "$bin")"
     else
@@ -75,7 +85,9 @@ if [ -d "$HOME/.vps/sessions" ]; then
 fi
 
 section "systemd user service"
-if command -v systemctl &> /dev/null; then
+if [ "$CONTAINER_CI" -eq 1 ]; then
+    ok "systemd service checks skipped in container/CI mode"
+elif command -v systemctl &> /dev/null; then
     if [ -f "$SERVICE_PATH" ]; then
         ok "service file installed at $SERVICE_PATH"
     else
@@ -98,7 +110,9 @@ else
 fi
 
 section "User lingering"
-if command -v loginctl &> /dev/null; then
+if [ "$CONTAINER_CI" -eq 1 ]; then
+    ok "user lingering checks skipped in container/CI mode"
+elif command -v loginctl &> /dev/null; then
     if loginctl show-user "$USER" 2>/dev/null | grep -q "Linger=yes"; then
         ok "Linger=yes (service will run when nobody is logged in)"
     else

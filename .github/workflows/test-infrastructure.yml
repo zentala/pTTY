@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔧 Install tmux
-        run: sudo apt-get update && sudo apt-get install -y tmux
+        run: sudo apt-get update && sudo apt-get install -y tmux shellcheck
 
       - name: ✅ Test local installation
         run: |
@@ -61,11 +61,30 @@ jobs:
             fi
           done
 
+          for script in tools/*.sh tests/scripts/*.sh; do
+            if [ -f "$script" ]; then
+              bash -n "$script"
+              echo "✅ $script syntax is valid"
+            fi
+          done
+
+          find install.sh src tools tests/scripts -name "*.sh" -type f \
+            ! -name "*old-backup.sh" | while read -r script; do
+            shellcheck -S error "$script"
+          done
+
       - name: 🧪 Test tmux configuration
         run: |
-          # Test tmux config syntax
-          tmux -f src/tmux.conf -C list-sessions || true
+          # Test tmux config syntax.
+          mkdir -p "$HOME/.tmux-persistent-console"
+          cp -r src/. "$HOME/.tmux-persistent-console/"
+          tmux -f src/tmux.conf start-server \; source-file src/tmux.conf \; list-keys >/dev/null
           echo "✅ Tmux configuration is valid"
+
+      - name: 🔗 Validate release references
+        run: |
+          bash tools/check-tmux-references.sh
+          bash tools/check-markdown-links.sh README.md CLAUDE.md
 
       - name: 📋 Validate Terraform
         uses: hashicorp/setup-terraform@v3

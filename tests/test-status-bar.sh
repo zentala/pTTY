@@ -42,19 +42,19 @@ check_status_bar() {
 
     # Count occurrences of status bar indicators
     local f1_count=$(echo "$status_right" | grep -c "F1" || true)
-    local f7_count=$(echo "$status_right" | grep -c "F7" || true)
+    local f10_count=$(echo "$status_right" | grep -c "F10" || true)
     local f12_count=$(echo "$status_right" | grep -c "F12" || true)
 
     echo "   Terminal height: $term_height"
     echo "   Status position: $status_position"
     echo "   F1 occurrences: $f1_count"
-    echo "   F7 occurrences: $f7_count"
+    echo "   F10 occurrences: $f10_count"
     echo "   F12 occurrences: $f12_count"
 
     local errors=0
 
     # Test 1: Icon count verification (12 total: 10 consoles + F11 + F12)
-    local icon_count=$(echo "$status_right" | grep -oE "󰢩|󰲝|󱫋|󰲊" | wc -l)
+    local icon_count=$(echo "$status_right" | grep -oE "󰢩|󱫋|󰲊" | wc -l)
     if [ "$icon_count" -lt 12 ]; then
         echo -e "   ${RED}❌ FAIL: Missing icons in status bar${NC}"
         echo "      Expected: 12 icons total (F1-F10 + F11 + F12)"
@@ -74,7 +74,7 @@ check_status_bar() {
         echo -e "   ${GREEN}✅ PASS: Status bar is at bottom${NC}"
     fi
 
-    # Test 3: Status bar should contain ALL session indicators F1-F12
+    # Test 3: Status bar should contain ALL key indicators F1-F12
     local has_all_sessions=1
     for i in {1..12}; do
         if ! echo "$status_right" | grep -q " F$i "; then
@@ -84,7 +84,7 @@ check_status_bar() {
         fi
     done
     if [ "$has_all_sessions" -eq 1 ]; then
-        echo -e "   ${GREEN}✅ PASS: All 12 session indicators present (F1-F12)${NC}"
+        echo -e "   ${GREEN}✅ PASS: All 12 key indicators present (F1-F12)${NC}"
     fi
 
     # Test 4: Current session should be highlighted (colour39 = cyan)
@@ -113,7 +113,7 @@ echo ""
 
 total_errors=$initial_result
 
-for i in {1..7}; do
+for i in {1..10}; do
     session="console-$i"
 
     # Switch to session

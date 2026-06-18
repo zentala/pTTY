@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mission Control - F12 Panel for tmux session management
+# Mission Control - F11 panel for tmux session management
 # Persistent Console v1.0.0
 
 # Version info
@@ -47,6 +47,9 @@ build_session_list() {
             console-5) fkey="[F5]" ;;
             console-6) fkey="[F6]" ;;
             console-7) fkey="[F7]" ;;
+            console-8) fkey="[F8]" ;;
+            console-9) fkey="[F9]" ;;
+            console-10) fkey="[F10]" ;;
             *) fkey="    " ;;
         esac
 

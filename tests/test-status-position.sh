@@ -37,7 +37,7 @@ check_precise_position() {
     local numbered_content=$(tmux capture-pane -t "$session_name" -p -S - -E - | cat -n)
 
     # Find which line contains status bar
-    local status_line=$(echo "$numbered_content" | grep "F1.*F7" | head -1)
+    local status_line=$(echo "$numbered_content" | grep "F1.*F10" | head -1)
 
     if [ -z "$status_line" ]; then
         echo -e "   ${RED}❌ FAIL: Status bar not found in pane${NC}"
@@ -69,7 +69,7 @@ check_precise_position() {
     echo -e "   ${GREEN}✅ PASS: Status bar is at bottom (line $line_num/${total_lines})${NC}"
 
     # Check for duplicates
-    local status_count=$(echo "$numbered_content" | grep -c "F1.*F7" || true)
+    local status_count=$(echo "$numbered_content" | grep -c "F1.*F10" || true)
     if [ "$status_count" -ne 1 ]; then
         echo -e "   ${RED}❌ FAIL: Found $status_count status bars (expected 1)${NC}"
         return 1
@@ -101,7 +101,7 @@ echo ""
 
 total_errors=$result
 
-for i in {1..7}; do
+for i in {1..10}; do
     session="console-$i"
 
     if ! tmux has-session -t "$session" 2>/dev/null; then

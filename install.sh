@@ -1,6 +1,6 @@
 #!/bin/bash
 # Tmux Persistent Console - One-line installer
-# curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash
+# curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash
 
 set -e
 
@@ -28,7 +28,7 @@ Usage: install.sh [--dry-run] [--version] [--help]
   --help      This help
 
 One-liner install:
-  curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash
+  curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash
 EOF
             exit 0
             ;;
@@ -54,7 +54,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
     echo "  6. Install systemd user service:   ~/.config/systemd/user/tmux-console.service"
     echo "  7. Enable user lingering:          loginctl enable-linger \$USER"
     echo "  8. Enable + start service:         systemctl --user enable --now tmux-console.service"
-    echo "  9. Verify service is active and console-1..console-5 exist"
+    echo "  9. Verify service is active and console-1..console-10 exist"
     echo ""
     echo "To actually install, re-run without --dry-run."
     exit 0
@@ -68,9 +68,11 @@ if [ -d "$HOME/.vps/sessions" ]; then
     echo ""
 fi
 
-# Detect container / CI environments — skip interactive/heavy deps
+# Detect container / CI environments.
+CONTAINER_CI=0
 SKIP_TUI_DEPS=0
 if [ -f /.dockerenv ] || [ -n "${CI:-}" ] || [ -n "${CONTAINER:-}" ]; then
+    CONTAINER_CI=1
     SKIP_TUI_DEPS=1
     echo -e "${YELLOW}📦 Container/CI environment detected — skipping optional TUI deps (gum, fzf)${NC}"
     echo -e "${YELLOW}   Set SKIP_TUI_DEPS=0 to force install them.${NC}"
@@ -295,8 +297,20 @@ if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
     export PATH="$BIN_DIR:$PATH"
 fi
 
-# Install systemd user service so sessions survive reboot
-if ! command -v systemctl &> /dev/null; then
+# Install systemd user service so empty sessions are recreated after boot.
+if [ "$CONTAINER_CI" -eq 1 ]; then
+    echo -e "${YELLOW}📦 Container/CI mode — skipping systemd user service setup${NC}"
+    echo -e "${YELLOW}   Creating console sessions directly for verification.${NC}"
+    bash "$INSTALL_DIR/setup.sh"
+
+    if ! tmux ls 2>/dev/null | grep -q "^console-1:"; then
+        echo -e "${RED}❌ setup.sh completed but no console-* sessions found${NC}"
+        echo -e "${RED}   Check setup.sh:  bash -x $INSTALL_DIR/setup.sh${NC}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}✅ Container/CI sessions verified${NC}"
+elif ! command -v systemctl &> /dev/null; then
     echo -e "${YELLOW}⚠️  systemctl not found — skipping autostart setup${NC}"
     echo -e "${YELLOW}   You will need to start sessions manually with: bash $INSTALL_DIR/setup.sh${NC}"
 else
@@ -316,7 +330,7 @@ else
     cp "$SERVICE_SRC" "$HOME/.config/systemd/user/tmux-console.service"
     systemctl --user daemon-reload
 
-    # Enable lingering so user services run without an active login (survives reboot)
+    # Enable lingering so user services run without an active login after boot.
     if ! loginctl show-user "$USER" 2>/dev/null | grep -q "Linger=yes"; then
         echo -e "${YELLOW}   Enabling user lingering...${NC}"
         if loginctl enable-linger "$USER" 2>/dev/null; then
@@ -324,7 +338,7 @@ else
         elif sudo loginctl enable-linger "$USER" 2>/dev/null; then
             echo -e "${GREEN}   ✓ Lingering enabled (via sudo)${NC}"
         else
-            echo -e "${YELLOW}   ⚠ Could not enable lingering — sessions will NOT survive reboot until you run:${NC}"
+            echo -e "${YELLOW}   ⚠ Could not enable lingering — empty sessions will not auto-create after boot until you run:${NC}"
             echo -e "${YELLOW}     sudo loginctl enable-linger $USER${NC}"
         fi
     fi
@@ -363,9 +377,9 @@ echo -e "   ${YELLOW}connect-console${NC}           # Interactive session menu"
 echo -e "   ${YELLOW}tmux attach -t console-1${NC}  # Direct to console-1"
 echo ""
 echo -e "${BLUE}🔥 Function Keys (from within tmux):${NC}"
-echo -e "   ${YELLOW}Ctrl+F1-F7${NC}  Jump to console 1-7"
-echo -e "   ${YELLOW}Ctrl+F8${NC}     Disconnect"
-echo -e "   ${YELLOW}Ctrl+F12${NC}    Show all sessions"
+echo -e "   ${YELLOW}Ctrl+F1-F10${NC} Jump to console 1-10"
+echo -e "   ${YELLOW}Ctrl+F11${NC}    Open manager menu"
+echo -e "   ${YELLOW}Ctrl+F12${NC}    Show keyboard help"
 echo ""
 echo -e "${BLUE}🌐 Remote SSH Access:${NC}"
 echo -e "   ${YELLOW}ssh user@server -t \"tmux attach -t console-1\"${NC}"
@@ -373,5 +387,5 @@ echo ""
 echo -e "${BLUE}🗑️  Uninstall:${NC}"
 echo -e "   ${YELLOW}uninstall-console${NC}"
 echo ""
-echo -e "${GREEN}🎉 Your work is now crash-resistant! Enjoy coding with AI CLI tools!${NC}"
+echo -e "${GREEN}🎉 Your sessions are protected from SSH/client disconnects. Enjoy coding with AI CLI tools!${NC}"
 echo ""

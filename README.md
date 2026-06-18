@@ -1,6 +1,6 @@
 # 🖥️ pTTY — Persistent terminals for AI coding
 
-> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, laptop sleep, and even a full client reboot. SSH back into the server and your tmux sessions are still running — same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`–`F10` jumps between 10 consoles like browser tabs (5 active, 5 on-demand); `Ctrl+F11` opens the manager menu, `Ctrl+F12` shows the keyboard cheatsheet.
+> Your Claude Code, Codex, Gemini CLI, and Aider sessions survive SSH drops, bad WiFi, laptop sleep, and even a full client reboot. SSH back into the server and your tmux sessions are still running: same conversation context, same scrollback, same running processes. Once attached, `Ctrl+F1`-`Ctrl+F10` jumps between 10 always-on consoles like browser tabs; `Ctrl+F11` opens the manager menu, `Ctrl+F12` shows the keyboard cheatsheet.
 
 ![pTTY console — Claude Code running inside tmux, F1–F12 tab bar at the bottom](docs/images/ptty-console.png)
 
@@ -22,7 +22,7 @@ This is the daily reality of remote AI-assisted development:
 
 ## The Solution
 
-pTTY keeps the **process alive on the server** while you reconnect. tmux runs as a server process; your AI CLI runs as its child; both keep going even when SSH dies. SSH back into the server (`ssh user@host -t "tmux attach -t console-1"`, or via the `connect-console` menu, or a pre-configured Windows Terminal / iTerm profile) and you land exactly where you were — same conversation, same scrollback, same running processes. From there, `Ctrl+F1`–`F12` switches between 5 always-on consoles inside tmux, each holding its own session.
+pTTY keeps the **process alive on the server** while you reconnect. tmux runs as a server process; your AI CLI runs as its child; both keep going even when SSH dies. SSH back into the server (`ssh user@host -t "tmux attach -t console-1"`, or via the `connect-console` menu, or a pre-configured Windows Terminal / iTerm profile) and you land exactly where you were: same conversation, same scrollback, same running processes. From there, `Ctrl+F1`-`Ctrl+F10` switches between 10 always-on consoles inside tmux, each holding its own session.
 
 ### What pTTY protects you from
 
@@ -43,8 +43,7 @@ If you need crash-survivable AI sessions, that's a different product (state repl
 ## ✨ Features
 
 ### 🚀 Instant Session Switching
-- **Ctrl+F1-F5**: Jump directly to active consoles (1-5)
-- **Ctrl+F6-F10**: Access suspended consoles on demand (6-10)
+- **Ctrl+F1-F10**: Jump directly to consoles 1-10
 - **Ctrl+F11**: Open Manager Menu (interactive terminal manager)
 - **Ctrl+F12**: Show Help Reference (keyboard shortcuts)
 
@@ -97,16 +96,16 @@ pTTY explicitly does **not** try to survive server reboot — that's a fundament
 **One-liner (recommended):**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/zentala/tmux-persistent-console/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/zentala/pTTY/main/install.sh | bash
 ```
 
-This installs the scripts, copies `tmux.conf`, registers a systemd user service (`tmux-console.service`), enables `loginctl` lingering, and creates 5 always-on sessions (`console-1`…`console-5`). After install, sessions auto-recreate on every reboot — see [A note on server reboots](#a-note-on-server-reboots) for what that does and does not mean.
+This installs the scripts, copies `tmux.conf`, registers a systemd user service (`tmux-console.service`), enables `loginctl` lingering, and creates 10 always-on sessions (`console-1`...`console-10`). After a server restart, empty sessions are recreated automatically. See [A note on server reboots](#a-note-on-server-reboots) for what that does and does not mean.
 
 If you'd rather inspect the script before running it:
 
 ```bash
-git clone --depth 1 https://github.com/zentala/tmux-persistent-console.git
-cd tmux-persistent-console
+git clone --depth 1 https://github.com/zentala/pTTY.git
+cd pTTY
 bash install.sh
 ```
 
@@ -118,7 +117,7 @@ bash scripts/doctor.sh
 
 Should print all green; if anything is yellow/red it tells you exactly what's wrong.
 
-This creates 5 active sessions (`console-1`…`console-5`) and the `tpcon` helper. Five additional on-demand slots (`console-6`…`console-10`) are bound to `Ctrl+F6`–`F10` and spring up when first invoked.
+This creates 10 sessions (`console-1`...`console-10`) and the `connect-console` helper. `Ctrl+F1`-`Ctrl+F10` switches between those sessions after you are attached to tmux.
 
 ### 2. Set up a short SSH alias (recommended — this is the real DevEx win)
 
@@ -147,7 +146,7 @@ Now from your laptop:
 ssh tmux.example.com
 ```
 
-…and you're in `console-1` on the server. WiFi dies? Run the same command again — same session, same AI conversation, same scrollback. Once attached, `Ctrl+F1`–`F12` jumps between the 5 consoles.
+...and you're in `console-1` on the server. WiFi dies? Run the same command again: same session, same AI conversation, same scrollback. Once attached, `Ctrl+F1`-`Ctrl+F10` jumps between the 10 consoles.
 
 ### 3. (Optional) Per-console aliases for jumping straight into a specific tab
 
@@ -211,7 +210,7 @@ But seriously — set up the alias. It's the difference between `ssh tmux.exampl
 
 ## 📖 Key Bindings Reference
 
-### 🚀 Active Consoles (F1-F5)
+### Consoles (F1-F10)
 | Key | Console | Purpose |
 |-----|---------|---------|
 | `Ctrl+F1` | 🤖 Console-1 | Claude Code / AI Development |
@@ -219,15 +218,11 @@ But seriously — set up the alias. It's the difference between `ssh tmux.exampl
 | `Ctrl+F3` | 💻 Console-3 | General Development |
 | `Ctrl+F4` | 🧪 Console-4 | Testing & QA |
 | `Ctrl+F5` | 📊 Console-5 | Monitoring & Logs |
-
-### 💤 Suspended Consoles (F6-F10)
-| Key | Console | Status |
-|-----|---------|--------|
-| `Ctrl+F6` | Console-6 | Available on demand |
-| `Ctrl+F7` | Console-7 | Available on demand |
-| `Ctrl+F8` | Console-8 | Available on demand |
-| `Ctrl+F9` | Console-9 | Available on demand |
-| `Ctrl+F10` | Console-10 | Available on demand |
+| `Ctrl+F6` | Console-6 | Extra workspace |
+| `Ctrl+F7` | Console-7 | Extra workspace |
+| `Ctrl+F8` | Console-8 | Extra workspace |
+| `Ctrl+F9` | Console-9 | Extra workspace |
+| `Ctrl+F10` | Console-10 | Extra workspace |
 
 ### 🎛️ Manager & Help (F11-F12)
 | Key | Action | Purpose |
@@ -282,8 +277,9 @@ tmux ls
 # Kill specific session
 tmux kill-session -t console-1
 
-# Reset all sessions
-tmux kill-server && setup-console-sessions
+# Reset pTTY console sessions only
+for i in {1..10}; do tmux kill-session -t "console-$i" 2>/dev/null || true; done
+setup-console-sessions
 
 # Create additional sessions
 tmux new-session -d -s "project-work"
@@ -293,7 +289,7 @@ tmux new-session -d -s "project-work"
 
 ### Claude Code Remote Development
 
-You SSH in **once** — `ssh tmux.example.com` — and then use `Ctrl+F1`–`F5` to flip between consoles inside that single tmux session. No second SSH, no second terminal window required.
+You SSH in **once** — `ssh tmux.example.com` — and then use `Ctrl+F1`-`Ctrl+F10` to flip between consoles inside that single tmux session. No second SSH, no second terminal window required.
 
 ```text
 ssh tmux.example.com         # one connection — lands you in console-1
@@ -327,10 +323,10 @@ ssh tmux.example.com
 ## 📁 Project Structure
 
 ```
-tmux-persistent-console/
+pTTY/
 ├── install.sh              # One-liner installer
 ├── src/
-│   ├── setup.sh            # Creates 5 persistent sessions
+│   ├── setup.sh            # Creates 10 persistent sessions
 │   ├── connect.sh          # Interactive connection menu
 │   ├── tmux.conf           # Optimized tmux configuration
 │   └── uninstall.sh        # Clean removal script
@@ -347,7 +343,7 @@ tmux-persistent-console/
 ### What It Does
 1. Installs tmux configuration with function key bindings
 2. Installs `tmux-console.service` (systemd user unit) and enables it via `loginctl enable-linger` so empty sessions auto-recreate on boot
-3. Creates 5 persistent sessions (console-1 to console-5)
+3. Creates 10 persistent sessions (console-1 to console-10)
 4. Sets up `connect-console` command alias
 5. Configures optimal tmux settings for remote work
 
@@ -359,8 +355,8 @@ tmux-persistent-console/
 ### Manual Installation
 ```bash
 # Clone repository
-git clone https://github.com/zentala/tmux-persistent-console.git
-cd tmux-persistent-console
+git clone https://github.com/zentala/pTTY.git
+cd pTTY
 
 # Install
 ./install.sh
@@ -387,7 +383,7 @@ sudo loginctl enable-linger $USER   # required — without this, the service won
 
 # Verify
 systemctl --user status tmux-console.service
-tmux ls   # console-1 .. console-5 (empty, freshly created)
+tmux ls   # console-1 .. console-10 (empty, freshly created)
 ```
 
 ## 🛡️ Safe Exit Protection
@@ -418,7 +414,7 @@ Options:
 - 📚 **Educates users** - Shows consequences before action
 - 🚀 **Automatic installation** - Included in setup
 
-**See**: [SAFE-EXIT.md](SAFE-EXIT.md) for complete documentation
+**See**: [safe exit specification](02-planning/specs/SAFE-EXIT-SPEC.md) for complete behavior details.
 
 ## 🚨 Troubleshooting
 
@@ -456,7 +452,7 @@ Status bar uses Nerd Font glyphs from the Material Design Icons range
 
 1. **Server locale is not UTF-8** — `ssh user@server 'locale'`; if `LANG=C`,
    add `export LANG=C.UTF-8 LC_ALL=C.UTF-8` to `~/.bashrc` and recreate
-   sessions (`tmux kill-server && setup-console-sessions`).
+   sessions (`for i in {1..10}; do tmux kill-session -t "console-$i" 2>/dev/null || true; done; setup-console-sessions`).
 2. **SSH `RemoteCommand` bypasses your shell init** — bake the locale into
    the command itself:
    `RemoteCommand LANG=C.UTF-8 LC_ALL=C.UTF-8 /usr/bin/tmux -u attach -t console-1`
@@ -497,8 +493,8 @@ Want to test pTTY on a real server? We provide automated testing infrastructure 
 ### Quick Test Deployment
 ```bash
 # 1. Clone repository
-git clone https://github.com/zentala/tmux-persistent-console.git
-cd tmux-persistent-console
+git clone https://github.com/zentala/pTTY.git
+cd pTTY
 
 # 2. Setup Oracle Cloud credentials
 cp tests/terraform/terraform.tfvars.example tests/terraform/terraform.tfvars
@@ -533,20 +529,20 @@ See [`tests/README.md`](tests/README.md) for detailed testing documentation.
 
 This project follows **spec-driven development**. All features and behavior are documented in:
 
-**[SPEC.md](SPEC.md)** - Complete unified specification
+**[SPEC.md](02-planning/SPEC.md)** - Complete unified specification
 - F-key bindings and behavior
-- Active vs suspended terminals
+- Console lifecycle and F-key bindings
 - Manager Menu (F11) specification
 - Help Reference (F12) specification
 - Status bar design
 - Icons and iconography
 
-**For contributors:** Please read SPEC.md before making changes.
+**For contributors:** Please read [SPEC.md](02-planning/SPEC.md) before making changes.
 
 **See also:**
-- `docs/naming.md` - Naming conventions (pTTY/ptty/PersistentTTY)
-- `docs/ICONS.md` - Icon reference and usage
-- `ARCHITECTURE.md` - Technical architecture details
+- `03-architecture/NAMING.md` - Naming conventions (pTTY/ptty/PersistentTTY)
+- `docs/ICONS-NETWORK-SET.md` - Icon reference and usage
+- `03-architecture/ARCHITECTURE.md` - Technical architecture details
 - `CLAUDE.md` - AI assistant development guidelines
 
 ## 🔗 Related Projects

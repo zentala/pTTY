@@ -5,9 +5,9 @@
 .claude/.auto-build.log
 .claude/.auto-install.log
 .claude/.error-counts.tmp
+.claude/settings.local.json
 .plan/.error-counts.tmp
 
 # === Git worktrees (parallel branch checkouts, NOT branch content) ===
 .claude/worktrees/
 .claude-worktrees/
-

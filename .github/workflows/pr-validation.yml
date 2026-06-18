@@ -29,9 +29,10 @@ jobs:
       - name: 📋 Lint shell scripts
         run: |
           echo "🔍 Linting shell scripts..."
-          find . -name "*.sh" -type f | while read -r script; do
+          find install.sh src tools tests/scripts -name "*.sh" -type f \
+            ! -name "*old-backup.sh" | while read -r script; do
             echo "Checking: $script"
-            shellcheck "$script" || echo "⚠️ ShellCheck issues in $script"
+            shellcheck -S error "$script"
           done
 
       - name: ✅ Validate syntax
@@ -61,8 +62,18 @@ jobs:
       - name: 🧪 Test tmux config
         run: |
           echo "🔍 Testing tmux configuration..."
-          tmux -f src/tmux.conf -C list-sessions 2>/dev/null || true
+          mkdir -p "$HOME/.tmux-persistent-console"
+          cp -r src/. "$HOME/.tmux-persistent-console/"
+          tmux -f src/tmux.conf start-server \; source-file src/tmux.conf \; list-keys >/dev/null
           echo "✅ Tmux configuration is valid"
+
+      - name: 🔗 Validate tmux references
+        run: |
+          bash tools/check-tmux-references.sh
+
+      - name: 🔗 Validate markdown links
+        run: |
+          bash tools/check-markdown-links.sh README.md CLAUDE.md
 
       - name: 🏗️ Validate Terraform
         uses: hashicorp/setup-terraform@v3
@@ -131,16 +142,14 @@ jobs:
       - name: 📥 Checkout PR
         uses: actions/checkout@v4
 
-      - name: 🔍 Check markdown files
-        uses: DavidAnson/markdownlint-action@v1
-        with:
-          files: '**/*.md'
-          config: |
-            {
-              "MD013": false,
-              "MD033": false,
-              "MD041": false
-            }
+      - name: 🔍 Check release-facing markdown links
+        run: |
+          bash tools/check-markdown-links.sh \
+            README.md \
+            CLAUDE.md \
+            docs/troubleshooting.md \
+            docs/windows-terminal.md \
+            .plan/REVIEW.md
 
       - name: 📋 Validate README updates
         run: |
@@ -154,7 +163,8 @@ jobs:
               if grep -q "## .*$section" README.md; then
                 echo "✅ Found section: $section"
               else
-                echo "⚠️ Missing section: $section"
+                echo "❌ Missing section: $section"
+                exit 1
               fi
             done
           else

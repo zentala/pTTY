@@ -232,9 +232,9 @@ tmux source-file ~/.tmux.conf
 # Reload tmux configuration
 tmux source-file ~/.tmux.conf
 
-# Or restart tmux server
-tmux kill-server
-tmux new-session
+# Or recreate pTTY console sessions only
+for i in {1..10}; do tmux kill-session -t "console-$i" 2>/dev/null || true; done
+setup-console-sessions
 ```
 
 ### Function key bindings not working
@@ -293,9 +293,9 @@ separate single-byte chars, mangling them on the way to the terminal.
 echo 'export LANG=C.UTF-8'   >> ~/.bashrc
 echo 'export LC_ALL=C.UTF-8' >> ~/.bashrc
 
-# Restart tmux server so it inherits the new locale
-# (sessions are recreated empty — only do this if no live work is running)
-tmux kill-server
+# Recreate pTTY sessions so they inherit the new locale
+# (sessions are recreated empty - only do this if no live work is running)
+for i in {1..10}; do tmux kill-session -t "console-$i" 2>/dev/null || true; done
 LANG=C.UTF-8 LC_ALL=C.UTF-8 setup-console-sessions
 ```
 
@@ -504,8 +504,8 @@ Host server
 ### Complete reset
 
 ```bash
-# Kill all tmux sessions
-tmux kill-server
+# Kill pTTY console sessions only
+for i in {1..10}; do tmux kill-session -t "console-$i" 2>/dev/null || true; done
 
 # Remove tmux socket
 rm -rf /tmp/tmux-*

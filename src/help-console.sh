@@ -28,12 +28,12 @@ show_help_content() {
    Ctrl+F5  📊 Console-5 (Monitoring)
    Ctrl+F6  🌐 Console-6 (Git/Deploy)
    Ctrl+F7  🔧 Console-7 (System Admin)
+   Ctrl+F8  📟 Console-8
+   Ctrl+F9  📟 Console-9
+   Ctrl+F10 📟 Console-10
 
 ⚡ SYSTEM CONTROLS:
-   Ctrl+F8   🚪 Disconnect safely (detach)
-   Ctrl+F9   🔄 Toggle last session
-   Ctrl+F10  ⬅️  Previous session
-   Ctrl+F11  ➡️  Next session
+   Ctrl+F11  🎛️  Manager menu
    Ctrl+F12  📋 This help window
 
 🛠️  COMMANDS:
@@ -42,9 +42,10 @@ show_help_content() {
    Ctrl+Alt+R          Reset current terminal
 
 💡 TIPS:
-• Sessions survive SSH disconnects & reboots
+• Sessions survive SSH disconnects and client reboots
+• Server reboots recreate empty sessions, not in-memory context
 • Use Ctrl+b,d to detach without menu
-• This help window stays open - switch with Ctrl+F1-F7
+• This help window stays open - switch with Ctrl+F1-F10
 • Type 'exit' or close window when done
 
 EOF

@@ -25,6 +25,9 @@ show_main_menu() {
         "📊 Console-5 (Monitoring)" \
         "🌐 Console-6 (Git/Deploy)" \
         "🔧 Console-7 (System Admin)" \
+        "📟 Console-8" \
+        "📟 Console-9" \
+        "📟 Console-10" \
         "────────────────────" \
         "🔄 Reset current session" \
         "💥 Reset ALL sessions" \
@@ -64,7 +67,7 @@ reset_all_sessions() {
         echo "🔄 Resetting all sessions..."
 
         # Kill all console sessions
-        for i in {1..7}; do
+        for i in {1..10}; do
             tmux kill-session -t "console-$i" 2>/dev/null && echo "  ✓ Killed console-$i"
         done
 
@@ -72,7 +75,7 @@ reset_all_sessions() {
         if command -v setup-console-sessions >/dev/null 2>&1; then
             setup-console-sessions
         else
-            for i in {1..7}; do
+            for i in {1..10}; do
                 tmux new-session -d -s "console-$i" -n "main"
                 echo "  ✓ Created console-$i"
             done
@@ -176,8 +179,9 @@ show_detailed_help() {
     cat << 'EOF'
 
 🎯 PURPOSE:
-  7 persistent terminal sessions that survive SSH disconnects,
-  network issues, and system reboots.
+  10 persistent terminal sessions that survive SSH disconnects,
+  network issues, and client reboots. Server reboots recreate
+  empty sessions, not in-memory context.
 
 🖥️  CONSOLE LAYOUT:
   Console-1: Claude Code / AI Development
@@ -187,24 +191,24 @@ show_detailed_help() {
   Console-5: Monitoring / Logs / Performance
   Console-6: Git Operations / Deployment
   Console-7: System Administration
+  Console-8: Extra workspace
+  Console-9: Extra workspace
+  Console-10: Extra workspace
 
 ⌨️  KEYBOARD SHORTCUTS:
   Function Keys (Global):
-    Ctrl+F1-F7   Switch directly to console 1-7
-    Ctrl+F8      Disconnect (detach) safely
-    Ctrl+F9      Toggle to last used session
-    Ctrl+F10     Previous session
-    Ctrl+F11     Next session
+    Ctrl+F1-F10  Switch directly to console 1-10
+    Ctrl+F11     Manager menu
     Ctrl+F12     This help menu
 
   Traditional tmux (Ctrl+b prefix):
-    Ctrl+b, 1-7  Switch to console 1-7
+    Ctrl+b, 1-0  Switch to console 1-10
     Ctrl+b, s    Visual session selector
     Ctrl+b, d    Detach from session
 
 🔧 COMMANDS:
     connect-console          Interactive session menu
-    setup-console-sessions   Recreate all 7 sessions
+    setup-console-sessions   Recreate all 10 sessions
     uninstall-console        Remove this tool
 
 🌐 REMOTE ACCESS:
@@ -234,6 +238,9 @@ main() {
             *Console-5*) switch_to_console 5; break ;;
             *Console-6*) switch_to_console 6; break ;;
             *Console-7*) switch_to_console 7; break ;;
+            *Console-8*) switch_to_console 8; break ;;
+            *Console-9*) switch_to_console 9; break ;;
+            *Console-10*) switch_to_console 10; break ;;
             *Reset\ current*) reset_current_session ;;
             *Reset\ ALL*) reset_all_sessions; break ;;
             *Session\ status*) show_session_status ;;
