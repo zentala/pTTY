@@ -62,6 +62,8 @@ jobs:
       - name: 🧪 Test tmux config
         run: |
           echo "🔍 Testing tmux configuration..."
+          mkdir -p "$HOME/.tmux-persistent-console"
+          cp -r src/. "$HOME/.tmux-persistent-console/"
           tmux -f src/tmux.conf start-server \; source-file src/tmux.conf \; list-keys >/dev/null
           echo "✅ Tmux configuration is valid"
 

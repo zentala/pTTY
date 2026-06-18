@@ -68,6 +68,8 @@ jobs:
             shellcheck -S error "$script"
           done
 
+          mkdir -p "$HOME/.tmux-persistent-console"
+          cp -r src/. "$HOME/.tmux-persistent-console/"
           tmux -f src/tmux.conf start-server \; source-file src/tmux.conf \; list-keys >/dev/null
           bash tools/check-tmux-references.sh
           bash tools/check-markdown-links.sh README.md CLAUDE.md
