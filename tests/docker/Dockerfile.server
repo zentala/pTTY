@@ -42,22 +42,14 @@ RUN useradd -m -s /bin/bash devuser && \
     usermod -aG sudo devuser && \
     echo 'devuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-# Copy and install tmux-persistent-console
-COPY install.sh /tmp/install.sh
-COPY src/ /tmp/src/
+# Copy and install tmux-persistent-console through the local installer path.
+COPY install.sh /tmp/ptty/install.sh
+COPY src/ /tmp/ptty/src/
+COPY scripts/ /tmp/ptty/scripts/
 
-# Install for testuser
-RUN mkdir -p /home/testuser/.tmux-persistent-console && \
-    cp -r /tmp/src/* /home/testuser/.tmux-persistent-console/ && \
-    chown -R testuser:testuser /home/testuser/.tmux-persistent-console && \
-    chmod +x /home/testuser/.tmux-persistent-console/*.sh && \
-    ln -s /home/testuser/.tmux-persistent-console/connect.sh /usr/local/bin/connect-console
-
-# Install for devuser
-RUN mkdir -p /home/devuser/.tmux-persistent-console && \
-    cp -r /tmp/src/* /home/devuser/.tmux-persistent-console/ && \
-    chown -R devuser:devuser /home/devuser/.tmux-persistent-console && \
-    chmod +x /home/devuser/.tmux-persistent-console/*.sh
+RUN su - testuser -c 'cd /tmp/ptty && CI=1 bash install.sh && CI=1 bash scripts/doctor.sh' && \
+    su - devuser -c 'cd /tmp/ptty && CI=1 bash install.sh && CI=1 bash scripts/doctor.sh' && \
+    ln -sf /home/testuser/bin/connect-console /usr/local/bin/connect-console
 
 # Create test script
 RUN cat > /usr/local/bin/test-console.sh << 'EOF'

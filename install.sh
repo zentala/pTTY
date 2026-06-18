@@ -68,9 +68,11 @@ if [ -d "$HOME/.vps/sessions" ]; then
     echo ""
 fi
 
-# Detect container / CI environments — skip interactive/heavy deps
+# Detect container / CI environments.
+CONTAINER_CI=0
 SKIP_TUI_DEPS=0
 if [ -f /.dockerenv ] || [ -n "${CI:-}" ] || [ -n "${CONTAINER:-}" ]; then
+    CONTAINER_CI=1
     SKIP_TUI_DEPS=1
     echo -e "${YELLOW}📦 Container/CI environment detected — skipping optional TUI deps (gum, fzf)${NC}"
     echo -e "${YELLOW}   Set SKIP_TUI_DEPS=0 to force install them.${NC}"
@@ -296,7 +298,19 @@ if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
 fi
 
 # Install systemd user service so empty sessions are recreated after boot.
-if ! command -v systemctl &> /dev/null; then
+if [ "$CONTAINER_CI" -eq 1 ]; then
+    echo -e "${YELLOW}📦 Container/CI mode — skipping systemd user service setup${NC}"
+    echo -e "${YELLOW}   Creating console sessions directly for verification.${NC}"
+    bash "$INSTALL_DIR/setup.sh"
+
+    if ! tmux ls 2>/dev/null | grep -q "^console-1:"; then
+        echo -e "${RED}❌ setup.sh completed but no console-* sessions found${NC}"
+        echo -e "${RED}   Check setup.sh:  bash -x $INSTALL_DIR/setup.sh${NC}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}✅ Container/CI sessions verified${NC}"
+elif ! command -v systemctl &> /dev/null; then
     echo -e "${YELLOW}⚠️  systemctl not found — skipping autostart setup${NC}"
     echo -e "${YELLOW}   You will need to start sessions manually with: bash $INSTALL_DIR/setup.sh${NC}"
 else
