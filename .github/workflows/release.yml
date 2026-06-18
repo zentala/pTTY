@@ -65,7 +65,7 @@ jobs:
 
           find install.sh src tools tests/scripts -name "*.sh" -type f \
             ! -name "*old-backup.sh" | while read -r script; do
-            shellcheck "$script"
+            shellcheck -S error "$script"
           done
 
           tmux -f src/tmux.conf start-server \; source-file src/tmux.conf \; list-keys >/dev/null

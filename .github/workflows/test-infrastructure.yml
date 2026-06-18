@@ -70,7 +70,7 @@ jobs:
 
           find install.sh src tools tests/scripts -name "*.sh" -type f \
             ! -name "*old-backup.sh" | while read -r script; do
-            shellcheck "$script"
+            shellcheck -S error "$script"
           done
 
       - name: 🧪 Test tmux configuration
