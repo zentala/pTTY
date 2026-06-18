@@ -140,10 +140,14 @@ jobs:
       - name: 📥 Checkout PR
         uses: actions/checkout@v4
 
-      - name: 🔍 Check markdown files
-        uses: DavidAnson/markdownlint-cli2-action@v20
-        with:
-          globs: '**/*.md'
+      - name: 🔍 Check release-facing markdown links
+        run: |
+          bash tools/check-markdown-links.sh \
+            README.md \
+            CLAUDE.md \
+            docs/troubleshooting.md \
+            docs/windows-terminal.md \
+            .plan/REVIEW.md
 
       - name: 📋 Validate README updates
         run: |
