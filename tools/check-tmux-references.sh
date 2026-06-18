@@ -6,6 +6,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMUX_CONF="$ROOT_DIR/src/tmux.conf"
 INSTALLER="$ROOT_DIR/install.sh"
+INSTALL_PREFIX="~/.tmux-persistent-console/"
 missing=0
 
 check_file() {
@@ -25,10 +26,10 @@ check_file() {
 }
 
 while IFS= read -r ref; do
-    rel_path="${ref#~/.tmux-persistent-console/}"
+    rel_path="${ref#"$INSTALL_PREFIX"}"
     check_file "$rel_path"
 done < <(
-    grep -Eo "~/.tmux-persistent-console/[A-Za-z0-9_./-]+" "$TMUX_CONF" |
+    grep -Eo "$INSTALL_PREFIX[A-Za-z0-9_./-]+" "$TMUX_CONF" |
         sed "s/[\"';].*$//" |
         sort -u
 )
