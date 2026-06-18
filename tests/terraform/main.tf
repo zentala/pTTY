@@ -174,14 +174,14 @@ resource "oci_core_instance" "tmux_console_test" {
   }
 
   source_details {
-    source_type = "image"
-    source_id   = data.oci_core_images.ubuntu_images.images[0].id
+    source_type             = "image"
+    source_id               = data.oci_core_images.ubuntu_images.images[0].id
     boot_volume_size_in_gbs = 50 # Use 50GB out of 200GB free
   }
 
   metadata = {
     ssh_authorized_keys = file(var.ssh_public_key_path)
-    user_data          = local.cloud_init
+    user_data           = local.cloud_init
   }
 
   timeouts {
