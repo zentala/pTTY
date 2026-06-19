@@ -12,6 +12,10 @@ closing the v0.2 epic.
 - [x] Remove or archive obsolete backup scripts such as `src/console-help-old-backup.sh` and `src/help-console-old-backup.sh`.
 - [x] Normalize public naming across install paths, repo URL, README, release workflow, and docs.
 - [ ] Verify the actual minimum supported tmux version against the features used by `src/tmux.conf`.
+- [ ] Run a visual launch review of F11 Manager and F12 Help before recording
+      the promotional demo.
+- [ ] Add or verify a forced fallback-icon mode so non-Nerd-Font rendering can be
+      tested and optionally shown in the launch animation.
 - [x] Replace README examples that use broad `tmux kill-server` commands with scoped pTTY-only commands.
 - [x] Add a markdown link checker for README, Claude files, and release docs.
 - [x] Add an installer file-coverage check that fails when `tmux.conf` references a file not shipped by remote install.

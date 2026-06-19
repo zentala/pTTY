@@ -1,7 +1,7 @@
 ---
 name: BACKLOG
 description: Pre-epic ideas for pTTY — things worth doing but not scoped to a current epic yet
-updated: 2026-05-23
+updated: 2026-06-19
 ---
 
 # pTTY BACKLOG
@@ -48,9 +48,51 @@ move it into `.plan/epic-<version>-*/` with proper PLAN.md + tasks.
 
 ## Docs / Marketing
 
+### [ ] Pre-promotion visual polish for F11/F12
+
+- **Goal**: make the two interactive product surfaces look launch-ready before
+  recording any promotional asset.
+- **Why**: the promo video will mostly sell the F-key workflow. If F11 Manager or
+  F12 Help look unfinished, the video will amplify that weakness.
+- **Scope sketch**:
+  - Review F11 Manager layout, spacing, status labels, active-slot marker, and
+    empty-slot rendering on common terminal sizes.
+  - Review F12 Help grouping, scanability, key labels, close affordance, and
+    consistency with the actual tmux bindings.
+  - Validate both views in a Nerd Font terminal and in a plain terminal.
+  - Capture before/after screenshots for release notes and future regressions.
+- **Exit criteria**: F11 and F12 are good enough to be the hero frames of the
+  launch video without explanatory copy.
+- **Dependency**: do this before the animated demo/video task below.
+
+### [ ] Terminal icon fallback demo mode
+
+- **Goal**: make the non-Nerd-Font/fallback icon view intentional enough to show
+  in the launch video or screenshots.
+- **Why**: many developers will first try pTTY in a terminal that does not have a
+  Nerd Font installed. Showing graceful fallback builds trust and avoids a
+  "works only on my terminal" impression.
+- **Scope sketch**:
+  - Audit `src/theme-config.sh` fallback icons and status bar rendering.
+  - Add a documented way to force fallback icons for QA/demo recording, for
+    example an environment variable or tmux option.
+  - Ensure F11/F12 and the status bar remain aligned without Nerd Font glyphs.
+  - Decide whether the launch video shows both modes or keeps fallback as a
+    screenshot-only proof.
+- **Exit criteria**: fallback rendering is visually coherent and reproducible for
+  the demo script.
+- **Priority**: optional for promotion if it threatens video timing, but do it
+  before launch if the fallback view currently looks broken.
+
 ### [ ] Animated demo — SSH login + F-key tour (asciinema / vhs / similar)
 
 - **Goal**: pierwsze animowane demo pokazujące kluczowy use case pTTY.
+- **Promotion priority**: highest. The video/GIF is the main launch asset; do not
+  start broad promotion without it.
+- **Preconditions**:
+  - F11/F12 visual review is complete.
+  - Fallback icon mode is either polished and included, or explicitly deferred
+    from the launch video.
 - **Scenariusz nagrania** (do dopracowania, draft):
   1. Otwarty terminal na laptopie A (lokalny shell)
   2. `ssh server` (SSH alias z `~/.ssh/config` z `RemoteCommand tmux attach …`)
@@ -80,6 +122,27 @@ move it into `.plan/epic-<version>-*/` with proper PLAN.md + tasks.
 - **README hero**: nowy GIF idzie OBOK obecnego PNG (`docs/images/ptty-console.png`),
   nie zamiast — PNG ładuje się natychmiast, GIF dodaje ruch dla zainteresowanych.
 - **Pełen kontekst**: `.plan/reports/2026-05-23-website-and-asciinema.md`
+
+### [ ] Promotion channel plan
+
+- **Goal**: prepare a lightweight public-promotion plan after the video is ready.
+- **Channels**:
+  - Reddit communities for terminal, self-hosting, homelab, Linux, and developer
+    tooling audiences.
+  - Facebook developer and self-hosting groups where terminal tooling posts are
+    accepted by the group rules.
+  - Hacker News / social posts only after README, install path, and demo asset are
+    stable.
+- **Message angle**: "keep Claude Code / Codex / Gemini CLI / Aider sessions
+  alive over SSH and switch them with F-keys."
+- **Launch order**:
+  1. Publish README with final GIF/video and screenshots.
+  2. Post to a small friendly/dev group first and collect wording objections.
+  3. Fix obvious confusion in README/F12.
+  4. Post to Reddit and larger dev communities.
+  5. Consider Hacker News only when install and support flow can handle traffic.
+- **Exit criteria**: each channel has a short post draft, target URL, expected
+  first response, and a support checklist using `ptty-doctor`.
 
 ### [ ] Landing page (`ptty.sh` lub `ptty.dev`)
 
