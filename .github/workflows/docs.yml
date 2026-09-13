@@ -1,0 +1,67 @@
+name: 📚 Documentation Checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.md"
+      - "docs/**"
+      - ".plan/**"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "**.md"
+      - "docs/**"
+      - ".plan/**"
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    name: 📚 Documentation Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔗 Check markdown links
+        run: |
+          bash tools/check-markdown-links.sh \
+            README.md \
+            CLAUDE.md \
+            docs/troubleshooting.md \
+            docs/windows-terminal.md \
+            docs/SPEC.md \
+            CONTRIBUTING.md
+
+      - name: 📋 Validate README updates
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -q "README.md"; then
+            echo "📝 README.md was updated in this PR"
+            echo "📋 Checking README structure..."
+
+            required_sections=("Features" "Quick Start" "Installation" "Usage")
+            for section in "${required_sections[@]}"; do
+              if grep -q "## .*$section" README.md; then
+                echo "✅ Found section: $section"
+              else
+                echo "❌ Missing section: $section"
+                exit 1
+              fi
+            done
+          else
+            echo "📝 README.md not modified in this PR"
+          fi
+
+      - name: 📊 Docs summary
+        if: always()
+        run: |
+          echo "## 📚 Documentation Checks" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Markdown links**: validated" >> $GITHUB_STEP_SUMMARY
+          echo "- **README structure**: checked when modified" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: Complete" >> $GITHUB_STEP_SUMMARY

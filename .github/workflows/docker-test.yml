@@ -8,12 +8,25 @@ on:
       - 'install.sh'
       - 'tests/docker/**'
       - '.github/workflows/docker-test.yml'
+      - '!**.md'
+      - '!docs/**'
+      - '!.plan/**'
+      - '!README*'
+      - '!LICENSE'
+      - '!CHANGELOG*'
   pull_request:
     branches: [ main ]
     paths:
       - 'src/**'
       - 'install.sh'
       - 'tests/docker/**'
+      - '.github/workflows/docker-test.yml'
+      - '!**.md'
+      - '!docs/**'
+      - '!.plan/**'
+      - '!README*'
+      - '!LICENSE'
+      - '!CHANGELOG*'
   workflow_dispatch:
 
 permissions:
@@ -32,10 +45,25 @@ jobs:
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🔨 Build test images
-        run: |
-          cd tests/docker
-          docker compose build --parallel
+      - name: 🔨 Build server test image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tests/docker/Dockerfile.server
+          tags: ptty-tmux-server:latest
+          load: true
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,scope=server,mode=max
+
+      - name: 🔨 Build client test image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tests/docker/Dockerfile.client
+          tags: ptty-tmux-client:latest
+          load: true
+          cache-from: type=gha,scope=client
+          cache-to: type=gha,scope=client,mode=max
 
       - name: 🚀 Start test environment
         run: |
@@ -257,6 +285,19 @@ jobs:
 
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: 🔨 Build server test image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tests/docker/Dockerfile.server
+          tags: ptty-tmux-server:latest
+          load: true
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,scope=server,mode=max
+
+      - name: Tag second server image
+        run: docker tag ptty-tmux-server:latest ptty-tmux-server2:latest
 
       - name: 🚀 Start multi-server environment
         run: |

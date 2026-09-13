@@ -6,6 +6,7 @@ services:
     build:
       context: ../..
       dockerfile: tests/docker/Dockerfile.server
+    image: ptty-tmux-server:latest
     container_name: tmux-test-server
     hostname: tmux-server
     networks:
@@ -33,6 +34,7 @@ services:
     build:
       context: ../..
       dockerfile: tests/docker/Dockerfile.client
+    image: ptty-tmux-client:latest
     container_name: tmux-test-client
     hostname: tmux-client
     networks:
@@ -65,6 +67,7 @@ services:
     build:
       context: ../..
       dockerfile: tests/docker/Dockerfile.server
+    image: ptty-tmux-server2:latest
     container_name: tmux-test-server2
     hostname: tmux-server2
     networks:

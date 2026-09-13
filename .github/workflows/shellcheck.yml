@@ -8,6 +8,12 @@ on:
       - "scripts/**"
       - "src/**/*.sh"
       - ".github/workflows/shellcheck.yml"
+      - '!**.md'
+      - '!docs/**'
+      - '!.plan/**'
+      - '!README*'
+      - '!LICENSE'
+      - '!CHANGELOG*'
   push:
     branches: [main]
     paths:
@@ -15,6 +21,13 @@ on:
       - "install.sh"
       - "scripts/**"
       - "src/**/*.sh"
+      - ".github/workflows/shellcheck.yml"
+      - '!**.md'
+      - '!docs/**'
+      - '!.plan/**'
+      - '!README*'
+      - '!LICENSE'
+      - '!CHANGELOG*'
 
 permissions:
   contents: read

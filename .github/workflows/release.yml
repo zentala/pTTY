@@ -322,7 +322,7 @@ jobs:
           echo "**Full Changelog**: https://github.com/zentala/pTTY/compare/$PREVIOUS_TAG...$VERSION_TAG" >> RELEASE_NOTES.md
 
       - name: 🎉 Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION_TAG }}
           name: "pTTY ${{ env.VERSION_TAG }}"
