@@ -28,6 +28,7 @@ jobs:
   pre-release-validation:
     name: 🔍 Pre-Release Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: 📥 Checkout code
@@ -83,6 +84,7 @@ jobs:
     name: 📦 Build Release Artifacts
     runs-on: ubuntu-latest
     needs: pre-release-validation
+    timeout-minutes: 15
     outputs:
       artifact_name: ${{ steps.package.outputs.artifact_name }}
 
@@ -231,6 +233,7 @@ jobs:
     name: 🎉 Create GitHub Release
     runs-on: ubuntu-latest
     needs: [pre-release-validation, build-artifacts]
+    timeout-minutes: 10
     permissions:
       contents: write
 
@@ -339,6 +342,7 @@ jobs:
     name: ✅ Post-Release Validation
     runs-on: ubuntu-latest
     needs: create-release
+    timeout-minutes: 10
 
     steps:
       - name: 📥 Checkout released version

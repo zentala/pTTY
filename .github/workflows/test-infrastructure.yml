@@ -51,11 +51,16 @@ env:
 permissions:
   contents: read
 
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
 jobs:
   # Quick validation without cloud infrastructure
   quick-validation:
     name: 🚀 Quick Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4

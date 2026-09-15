@@ -27,11 +27,16 @@ env:
 permissions:
   contents: read
 
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
 jobs:
   # Fast validation for all PRs
   quick-checks:
     name: ⚡ Quick Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.event.pull_request.draft == false
 
     steps:
@@ -134,6 +139,7 @@ jobs:
   security-check:
     name: 🔒 Security Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     # TruffleHog diffs base..head — only meaningful on pull_request events
     if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
 
@@ -164,6 +170,7 @@ jobs:
   docs-check:
     name: 📚 Documentation Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event.pull_request.draft == false
 
     steps:
@@ -371,6 +378,7 @@ jobs:
   change-detection:
     name: 🔍 Change Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       needs_cloud_test: ${{ steps.changes.outputs.needs_cloud_test }}
       test_type: ${{ steps.changes.outputs.test_type }}
@@ -443,6 +451,7 @@ jobs:
   pr-status:
     name: 📋 PR Status
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [quick-checks, security-check, docs-check, change-detection]
     if: always()
 
